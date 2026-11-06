@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Create Account')}"></head>
+<body>
+
+<main class="auth-shell">
+    <div class="auth-card">
+
+        <a th:replace="~{fragments/layout :: brand(@{/login}, 'auth-brand')}"></a>
+        <span class="auth-badge auth-badge-user">Customer Portal</span>
+
+        <h2>Create your account</h2>
+        <p class="page-sub">Takes a minute. You will be signed in straight away.</p>
+
+        <div class="error-banner" th:if="${error}" th:text="${error}"></div>
+
+        <form id="register-form" method="post" th:action="@{/register}" novalidate>
+            <label>Full Name
+                <input type="text" name="fullName" th:value="${fullName}"
+                       placeholder="Your name" autofocus required/>
+            </label>
+            <label>Email Address
+                <input type="email" name="email" th:value="${email}"
+                       placeholder="you@example.com" autocomplete="username" required/>
+            </label>
+            <label>Phone Number
+                <input type="tel" name="phone" th:value="${phone}" placeholder="07XXXXXXXX"/>
+            </label>
+            <label>Password
+                <input type="password" name="password"
+                       placeholder="At least 6 characters" autocomplete="new-password" required/>
+            </label>
+            <label>Confirm Password
+                <input type="password" name="confirmPassword"
+                       placeholder="Re-enter your password" autocomplete="new-password" required/>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+
+        <p class="auth-alt">
+            Already registered? <a th:href="@{/login}">Sign in</a>
+        </p>
+    </div>
+</main>
+
+</body>
+</html>

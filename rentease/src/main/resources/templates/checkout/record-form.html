@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head(${record.id == null ? 'Create Checkout Record' : 'Edit Handover Details'})}"></head>
+<body class="rental-operations-page">
+<header th:replace="~{fragments/layout :: navbar('checkout')}"></header>
+<main class="container checkout-workflow-shell">
+    <a class="operations-back-link" th:href="@{/checkout/manage}">← Rental operations</a>
+    <section class="checkout-workflow-intro motion-reveal">
+        <span class="eyebrow">STAFF CONTROL · CHECKOUT RECORD</span>
+        <h1 th:text="${record.id == null ? 'Create checkout record' : 'Edit handover details'}">Edit handover details</h1>
+        <p>Only correctable handover details can be changed here. Rental identity, checkout stage, return details and calculated fees remain system-controlled.</p>
+    </section>
+    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <form class="handover-form-panel checkout-form" method="post" th:action="${record.id == null ? '/checkout/new' : '/checkout/edit/' + record.id}" th:object="${record}">
+        <div class="checkout-input-grid">
+            <label>Reservation ID<input type="number" th:field="*{reservationId}" required th:readonly="${record.id != null}"></label>
+            <label>Vehicle ID<input type="number" th:field="*{vehicleId}" required th:readonly="${record.id != null}"></label>
+            <label>Handover odometer (km)<input type="number" min="0" th:field="*{handoverOdometer}" required></label>
+            <label>Fuel at handover<select th:field="*{handoverFuelLevel}" required><option value="">Select level</option><option th:each="x : ${fuelLevels}" th:value="${x}" th:text="${x}"></option></select></label>
+            <label>Expected return date and time<input type="datetime-local" th:field="*{expectedReturnTimestamp}" required></label>
+            <label>Handover photo URL<input type="url" th:field="*{handoverPhotoUrl}" placeholder="https://…"></label>
+        </div>
+        <div class="staff-confirmation" th:if="${record.id != null}"><span class="eyebrow">CURRENT RECORD</span><strong th:text="${'Checkout #' + record.id + ' · ' + record.stage}">Checkout record</strong><small th:text="${'Handover recorded: ' + record.handoverTimestamp + ' · Staff: ' + record.handoverStaffId}">Handover history</small></div>
+        <div class="operation-actions"><button class="btn btn-primary" type="submit" th:text="${record.id == null ? 'Create checkout record' : 'Save handover changes'}">Save changes</button><a class="btn btn-secondary" th:href="@{/checkout/manage}">Cancel</a></div>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

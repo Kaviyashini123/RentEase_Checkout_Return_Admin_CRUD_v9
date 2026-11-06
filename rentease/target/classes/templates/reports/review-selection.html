@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Share Feedback')}"></head>
+<body class="reports-page">
+<header th:replace="~{fragments/layout :: navbar('reports')}"></header>
+<main class="container review-selection-page">
+    <div class="form-intro reveal">
+        <span class="eyebrow">CUSTOMER FEEDBACK</span>
+        <h1 th:text="${#lists.isEmpty(eligibleReservations)} ? 'Your feedback matters' : 'Choose a journey to review'">Choose a journey to review</h1>
+        <p th:text="${#lists.isEmpty(eligibleReservations)} ? 'Complete a rental journey to share your experience with RentEase.' : 'Select a completed journey and tell us how it went.'">Select a completed journey and tell us how it went.</p>
+    </div>
+    <p class="review-selection-notice" th:if="${selectionNotice != null}" th:text="${selectionNotice}"></p>
+    <section class="review-journey-list motion-stagger" th:if="${!#lists.isEmpty(eligibleReservations)}" aria-label="Completed journeys eligible for feedback">
+        <article class="review-journey-card" th:each="r : ${eligibleReservations}" th:with="vehicle=${vehiclesById[r.vehicleId]}">
+            <div class="review-journey-vehicle">
+                <div class="review-journey-image">
+                    <img th:if="${(vehicleImagesById != null and vehicleImagesById[r.vehicleId] != null) or (vehicle != null and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl))}" th:src="${vehicleImagesById != null and vehicleImagesById[r.vehicleId] != null ? vehicleImagesById[r.vehicleId] : vehicle.imageUrl}" th:alt="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle'}" data-review-vehicle-image/>
+                    <span data-review-image-fallback th:if="${vehicle == null or ((vehicleImagesById == null or vehicleImagesById[r.vehicleId] == null) and (vehicle.imageUrl == null or #strings.isEmpty(vehicle.imageUrl)))}">COMPLETED JOURNEY</span>
+                    <span data-review-image-fallback hidden>COMPLETED JOURNEY</span>
+                </div>
+                <div>
+                    <div class="review-context-meta-top">
+                        <span class="eyebrow" th:text="${vehicle != null and vehicle.type != null ? vehicle.type : 'COMPLETED JOURNEY'}">COMPLETED JOURNEY</span>
+                        <span class="review-reservation-badge" th:text="'RESERVATION · #' + ${r.id}">RESERVATION · #1</span>
+                    </div>
+                    <h2 th:text="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle #' + r.vehicleId}">Vehicle</h2>
+                </div>
+            </div>
+            <div class="review-journey-detail">
+                <span class="review-context-dates"><time data-review-date th:text="${r.startDate}"></time><span aria-hidden="true">→</span><time data-review-date th:text="${r.endDate}"></time></span>
+                <span class="review-context-route"><span th:text="${r.pickupLocation != null and !#strings.isEmpty(r.pickupLocation) ? r.pickupLocation : 'Pickup not specified'}">Pickup</span><span aria-hidden="true">→</span><span th:text="${r.dropoffLocation != null and !#strings.isEmpty(r.dropoffLocation) ? r.dropoffLocation : 'Drop-off not specified'}">Drop-off</span></span>
+            </div>
+            <a class="btn btn-primary review-journey-cta" th:href="@{/reports/review(reservationId=${r.id})}">Review this journey&nbsp; →</a>
+        </article>
+    </section>
+    <section class="review-feedback-empty reveal" th:if="${#lists.isEmpty(eligibleReservations)}">
+        <span class="eyebrow">YOUR RENTAL JOURNAL</span>
+        <strong>YOUR FEEDBACK MATTERS</strong>
+        <p>Complete a rental journey to share your experience with RentEase.</p>
+        <a class="btn btn-primary" th:href="@{/booking}">Explore the fleet&nbsp; →</a>
+        <a class="review-trips-link" th:href="@{/reservation/dashboard#my-trips}">View My Trips</a>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

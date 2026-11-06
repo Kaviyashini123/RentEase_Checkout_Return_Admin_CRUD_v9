@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Vehicle illustration">
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#252a27"/>
+      <stop offset="1" stop-color="#111412"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d7c18d" stop-opacity=".82"/>
+      <stop offset="1" stop-color="#9b875d" stop-opacity=".66"/>
+    </linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#d8c48f" stroke-opacity=".055" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="320" height="180" fill="url(#surface)"/>
+  <rect width="320" height="180" fill="url(#grid)"/>
+  <path d="M0 145h320" stroke="#d8c48f" stroke-opacity=".2"/>
+  <path d="m54 121 12-25c4-8 11-13 21-15l32-6 24-25c5-5 11-8 18-8h43c9 0 16 4 22 11l19 23 25 8c9 3 15 10 17 19l5 18-12 9H62z" fill="url(#body)" stroke="#e2d1a4" stroke-opacity=".72" stroke-width="2"/>
+  <path d="m119 80 23-24c4-4 9-6 15-6h42c6 0 11 3 15 8l17 22z" fill="#171b19" stroke="#ebdfbd" stroke-opacity=".45" stroke-width="2"/>
+  <path d="M168 51v30m53-2h-53" stroke="#d8c48f" stroke-opacity=".34"/>
+  <path d="M74 107h20m157 0h23" stroke="#fff0c5" stroke-linecap="round" stroke-width="5"/>
+  <circle cx="105" cy="126" r="19" fill="#111412" stroke="#d6c28f" stroke-width="3"/>
+  <circle cx="105" cy="126" r="7" fill="#7b7057"/>
+  <circle cx="245" cy="126" r="19" fill="#111412" stroke="#d6c28f" stroke-width="3"/>
+  <circle cx="245" cy="126" r="7" fill="#7b7057"/>
+  <path d="M25 158h270" stroke="#d6c28f" stroke-opacity=".14"/>
+</svg>

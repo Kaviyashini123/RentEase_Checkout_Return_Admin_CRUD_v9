@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Write a Review')}"></head>
+<body class="reports-page">
+<header th:replace="~{fragments/layout :: navbar('reports')}"></header>
+<main class="container narrow review-form-shell">
+    <div class="form-intro reveal"><span class="eyebrow">CUSTOMER FEEDBACK</span><h1 th:text="${review.id == null ? 'Rate your rental experience' : 'Update review'}">Rate your rental experience</h1><p>Tell us what went well and where RentEase can improve.</p></div>
+
+    <article class="review-reservation-context reveal" th:if="${reservation != null}" aria-label="Journey being reviewed">
+        <div class="review-context-image">
+            <img th:if="${vehicleImage != null or (vehicle != null and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl))}" th:src="${vehicleImage != null ? vehicleImage : vehicle.imageUrl}" th:alt="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle'}" data-review-vehicle-image/>
+            <span data-review-image-fallback th:if="${vehicle == null or (vehicleImage == null and (vehicle.imageUrl == null or #strings.isEmpty(vehicle.imageUrl)))}">YOUR JOURNEY</span>
+            <span data-review-image-fallback hidden>YOUR JOURNEY</span>
+        </div>
+        <div class="review-context-copy">
+            <div class="review-context-meta-top">
+                <span class="eyebrow" th:text="${vehicle != null and vehicle.type != null ? vehicle.type : 'COMPLETED JOURNEY'}">COMPLETED JOURNEY</span>
+                <span class="review-reservation-badge" th:text="'RESERVATION · #' + ${reservation.id}">RESERVATION · #1</span>
+            </div>
+            <h2 th:text="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle #' + reservation.vehicleId}">Selected vehicle</h2>
+            <p class="review-context-dates"><time data-review-date th:text="${reservation.startDate}"></time><span aria-hidden="true">→</span><time data-review-date th:text="${reservation.endDate}"></time></p>
+            <p class="review-context-route"><span th:text="${reservation.pickupLocation != null and !#strings.isEmpty(reservation.pickupLocation) ? reservation.pickupLocation : 'Pickup not specified'}">Pickup</span><span aria-hidden="true">→</span><span th:text="${reservation.dropoffLocation != null and !#strings.isEmpty(reservation.dropoffLocation) ? reservation.dropoffLocation : 'Drop-off not specified'}">Drop-off</span></p>
+        </div>
+    </article>
+
+    <section class="panel review-form-card reveal">
+        <div class="experience-preview">
+            <div><span class="eyebrow">YOUR RATING</span><h3 id="rating-label">Select a rating</h3></div>
+            <div class="star-picker" role="radiogroup" aria-label="Rating from 1 to 5">
+                <button type="button" data-rating="1" aria-label="1 star">★</button><button type="button" data-rating="2" aria-label="2 stars">★</button><button type="button" data-rating="3" aria-label="3 stars">★</button><button type="button" data-rating="4" aria-label="4 stars">★</button><button type="button" data-rating="5" aria-label="5 stars">★</button>
+            </div>
+        </div>
+        <div th:if="${averageRating != null}" class="vehicle-rating-note">Vehicle average: <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)} + ' / 5'">0 / 5</strong></div>
+        <form id="review-form" method="post" th:action="${review.id == null ? '/reports/review' : '/reports/review/edit/' + review.id}" th:object="${review}" class="review-form" novalidate>
+            <input id="rating-input" type="hidden" th:field="*{rating}"/>
+            <div class="form-grid">
+                <label th:if="${session.currentUser.admin}">Vehicle ID<input type="number" min="1" th:field="*{vehicleId}" required/></label>
+                <input th:unless="${session.currentUser.admin}" type="hidden" th:field="*{vehicleId}"/>
+                <input th:if="${reservation != null and !session.currentUser.admin}" type="hidden" th:field="*{reservationId}"/>
+                <label th:if="${session.currentUser.admin}">Customer ID<input type="number" min="1" th:field="*{customerId}" required/></label>
+                <label th:if="${session.currentUser.admin}">Reservation ID<input type="number" min="1" th:field="*{reservationId}"/></label>
+                <label class="checkbox-label" th:if="${session.currentUser.admin}"><input type="checkbox" th:field="*{flagged}"/> Flag for follow-up</label>
+            </div>
+            <label>Comment<textarea th:field="*{comment}" rows="5" maxlength="1000" placeholder="Tell us about your experience..."></textarea><span class="character-count"><span id="comment-count">0</span>/1000</span></label>
+            <button type="submit" class="btn btn-primary btn-block" th:text="${review.id == null ? 'Share your review →' : 'Save changes →'}">Share your review →</button>
+        </form>
+    </section>
+
+    <section th:if="${existingReviews != null}" class="panel reveal">
+        <div class="section-head"><div><span class="eyebrow">COMMUNITY FEEDBACK</span><h2>Other reviews</h2></div></div>
+        <div class="review-preview-grid" th:if="${!#lists.isEmpty(existingReviews)}"><article class="review-preview" th:each="r : ${existingReviews}"><div class="review-topline"><span class="stars" th:text="${'★'.repeat(r.rating) + '☆'.repeat(5-r.rating)}">★★★★★</span></div><p class="review-quote" th:text="${r.comment != null && !#strings.isEmpty(r.comment) ? '“' + r.comment + '”' : 'No comment provided.'}">Review</p></article></div>
+        <div class="empty-state compact" th:if="${#lists.isEmpty(existingReviews)}">No previous reviews for this vehicle.</div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

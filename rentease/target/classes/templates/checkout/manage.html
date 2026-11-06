@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Rental Operations')}"></head>
+<body class="rental-operations-page">
+<header th:replace="~{fragments/layout :: navbar('checkout')}"></header>
+<main class="container rental-operations-shell">
+    <section class="operations-intro motion-reveal">
+        <div>
+            <span class="eyebrow">FLEET CARE · DAILY OPERATIONS</span>
+            <h1>Rental operations</h1>
+            <p class="page-sub">Paid reservations move to handover. Active rentals stay visible until the vehicle is returned.</p>
+        </div>
+        <div class="operations-header-actions">
+            <div class="operations-legend"><span><i class="operation-dot ready"></i>Ready for pickup</span><span><i class="operation-dot active"></i>Active rental</span></div>
+            <a class="btn btn-primary operations-create-action" th:href="@{/checkout/handover}"><span aria-hidden="true">＋</span> Create checkout / Start handover</a>
+        </div>
+    </section>
+
+    <div class="alert success" th:if="${completed != null}">Return recorded. The reservation is now complete and available for customer feedback.</div>
+    <div class="alert success" th:if="${success != null}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error != null}" th:text="${error}"></div>
+
+    <section class="operations-section motion-reveal" aria-labelledby="pickup-heading">
+        <div class="operations-section-heading"><div><span class="eyebrow">CONFIRMED · PAID</span><h2 id="pickup-heading">Upcoming pickups</h2></div><span class="operations-count" th:text="${#lists.size(pickupOperations)} + ' READY'">0 READY</span></div>
+        <div class="operations-grid" th:if="${!#lists.isEmpty(pickupOperations)}">
+            <article class="operation-card" th:each="op : ${pickupOperations}">
+                <div class="operation-image">
+                    <img th:src="${op.vehicle.imageUrl != null and !#strings.isEmpty(op.vehicle.imageUrl) ? op.vehicle.imageUrl : (op.vehicle.brand == 'Tesla' and op.vehicle.model == 'Model 3' ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg')}" th:alt="${op.vehicle.brand + ' ' + op.vehicle.model}" onerror="if (!this.dataset.fallbackTried) { this.dataset.fallbackTried='true'; this.src = this.alt.includes('Tesla Model 3') ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg'; } else { this.style.display='none'; this.nextElementSibling.style.display='grid'; }">
+                    <span style="display:none">RENTEASE · FLEET CARE</span>
+                    <b class="operation-badge ready">READY FOR PICKUP</b>
+                </div>
+                <div class="operation-card-body">
+                    <div class="operation-vehicle-title"><div><span class="eyebrow" th:text="${op.vehicle.type}">CATEGORY</span><h3 th:text="${op.vehicle.brand + ' ' + op.vehicle.model}">Vehicle</h3></div><span class="operation-ref" th:text="'#' + ${op.reservation.id}">#0</span></div>
+                    <div class="operation-facts">
+                        <div><span>CUSTOMER</span><strong th:text="${op.customer != null ? op.customer.fullName : 'Customer #' + op.reservation.customerId}">Customer</strong></div>
+                        <div><span>PAYMENT</span><strong class="paid-value">PAID <small th:if="${op.payment != null}" th:text="'· LKR ' + ${#numbers.formatDecimal(op.payment.amount,1,2)}">· LKR 0</small></strong></div>
+                        <div><span>PICKUP</span><strong th:text="${op.reservation.startDate}">Date</strong><small th:text="${op.reservation.pickupLocation}">Location</small></div>
+                        <div><span>EXPECTED RETURN</span><strong th:text="${op.reservation.endDate}">Date</strong><small th:text="${op.reservation.dropoffLocation}">Location</small></div>
+                    </div>
+                    <a class="btn btn-primary operation-action" th:if="${op.pickupStarted}" th:href="@{/checkout/handover(reservationId=${op.reservation.id})}">Start rental checkout <span aria-hidden="true">→</span></a>
+                    <span class="pickup-date-note" th:unless="${op.pickupStarted}" th:text="${'Pickup opens ' + op.reservation.startDate}">Pickup date</span>
+                </div>
+            </article>
+        </div>
+        <div class="operations-empty" th:if="${#lists.isEmpty(pickupOperations)}"><strong>No paid reservations are waiting for pickup.</strong><span>Confirmed reservations appear here after successful payment.</span></div>
+    </section>
+
+    <section class="operations-section motion-reveal" aria-labelledby="active-heading">
+        <div class="operations-section-heading"><div><span class="eyebrow">HANDOVER COMPLETE</span><h2 id="active-heading">Active rentals & returns</h2><p class="operations-helper">Update actions are shown on each active rental. Process the return here when the vehicle comes back.</p></div><span class="operations-count" th:text="${#lists.size(activeOperations)} + ' ACTIVE'">0 ACTIVE</span></div>
+        <div class="operations-grid" th:if="${!#lists.isEmpty(activeOperations)}">
+            <article class="operation-card active-operation" th:each="op : ${activeOperations}">
+                <div class="operation-image">
+                    <img th:src="${op.vehicle.imageUrl != null and !#strings.isEmpty(op.vehicle.imageUrl) ? op.vehicle.imageUrl : (op.vehicle.brand == 'Tesla' and op.vehicle.model == 'Model 3' ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg')}" th:alt="${op.vehicle.brand + ' ' + op.vehicle.model}" onerror="if (!this.dataset.fallbackTried) { this.dataset.fallbackTried='true'; this.src = this.alt.includes('Tesla Model 3') ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg'; } else { this.style.display='none'; this.nextElementSibling.style.display='grid'; }">
+                    <span style="display:none">RENTEASE · ACTIVE RENTAL</span>
+                    <b class="operation-badge active">ACTIVE RENTAL</b>
+                </div>
+                <div class="operation-card-body">
+                    <div class="operation-vehicle-title"><div><span class="eyebrow" th:text="${op.vehicle.type}">CATEGORY</span><h3 th:text="${op.vehicle.brand + ' ' + op.vehicle.model}">Vehicle</h3></div><span class="operation-ref" th:text="'#' + ${op.reservation.id}">#0</span></div>
+                    <div class="operation-facts">
+                        <div><span>CUSTOMER</span><strong th:text="${op.customer != null ? op.customer.fullName : 'Customer #' + op.reservation.customerId}">Customer</strong></div>
+                        <div><span>CHECKED OUT</span><strong th:text="${op.checkout.handoverTimestamp}">Timestamp</strong><small th:text="${op.checkout.handoverOdometer + ' km · ' + op.checkout.handoverFuelLevel}">Handover condition</small></div>
+                        <div><span>EXPECTED RETURN</span><strong th:text="${op.checkout.expectedReturnTimestamp}">Timestamp</strong></div>
+                        <div><span>RETURN LOCATION</span><strong th:text="${op.reservation.dropoffLocation}">Location</strong></div>
+                    </div>
+                    <div class="operation-actions">
+                        <a class="btn btn-secondary" th:href="@{/checkout/edit/{id}(id=${op.checkout.id})}">Edit handover</a>
+                        <a class="btn btn-primary operation-action" th:href="@{/checkout/return(checkoutRecordId=${op.checkout.id})}">Process vehicle return <span aria-hidden="true">→</span></a>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div class="operations-empty" th:if="${#lists.isEmpty(activeOperations)}"><strong>No vehicles are currently checked out.</strong><span>There are no active records to update yet. Create a checkout from an eligible paid reservation; Edit handover and Process vehicle return will appear on its active-rental card.</span><a class="btn btn-secondary" th:href="@{/checkout/handover}">Go to checkout creation</a></div>
+    </section>
+
+    <details class="operations-secondary motion-reveal" th:if="${!#lists.isEmpty(unpaidOperations)}">
+        <summary><span><span class="eyebrow">PAYMENT REQUIRED</span><strong>Confirmed reservations awaiting payment</strong></span><span class="operations-count" th:text="${#lists.size(unpaidOperations)} + ' HELD'">0 HELD</span></summary>
+        <div class="unpaid-list"><div th:each="op : ${unpaidOperations}"><strong th:text="${op.vehicle.brand + ' ' + op.vehicle.model}">Vehicle</strong><span th:text="${'Reservation #' + op.reservation.id + ' · ' + op.customer?.fullName}">Reservation</span><span class="unpaid-status" th:text="${op.payment != null ? op.payment.status : 'UNPAID'}">UNPAID</span></div></div>
+    </details>
+
+    <section class="operations-section completed-section motion-reveal" aria-labelledby="completed-heading" th:if="${!#lists.isEmpty(completedOperations)}">
+        <div class="operations-section-heading"><div><span class="eyebrow">RETURNED TO FLEET</span><h2 id="completed-heading">Recently completed</h2></div><span class="operations-count" th:text="${#lists.size(completedOperations)} + ' RETURNED'">0 RETURNED</span></div>
+        <div class="completed-list"><article th:each="op : ${completedOperations}"><div><span class="eyebrow" th:text="${'RESERVATION #' + op.reservation.id}">REFERENCE</span><strong th:text="${op.vehicle.brand + ' ' + op.vehicle.model}">Vehicle</strong><small th:text="${op.customer != null ? op.customer.fullName : 'Customer #' + op.reservation.customerId}">Customer</small></div><div><span>RETURNED</span><strong th:text="${op.checkout.returnTimestamp}">Timestamp</strong><small th:text="${'LATE FEE · LKR ' + #numbers.formatDecimal(op.checkout.lateFee,1,2)}">LATE FEE</small></div><div class="completed-actions"><span class="operation-badge returned">COMPLETED</span><form method="post" th:action="@{/checkout/delete/{id}(id=${op.checkout.id})}" onsubmit="return confirm('Permanently remove this completed checkout record and its linked damage reports? This cannot be undone.');"><button type="submit" class="btn btn-danger">Delete record</button></form></div></article></div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

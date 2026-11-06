@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Payment Receipt')}"></head>
+<body class="payment-page invoice-page">
+<header th:replace="~{fragments/layout :: navbar('payment')}"></header>
+
+<main class="container invoice-shell">
+    <section class="payment-success-intro" aria-labelledby="payment-success-title">
+        <span class="success-check" aria-hidden="true">✓</span>
+        <span class="eyebrow">PAYMENT SUCCESSFUL</span>
+        <h1 id="payment-success-title">Your journey is confirmed.</h1>
+        <p>Your simulated payment has been securely recorded. This is your RentEase invoice.</p>
+    </section>
+
+    <article class="invoice-document motion-reveal">
+        <header class="invoice-document-header">
+            <div><a th:replace="~{fragments/layout :: brand(@{/booking}, '')}"></a><span class="invoice-brand-caption">VEHICLE RENTAL</span></div>
+            <div class="invoice-number-block"><span class="eyebrow">INVOICE</span><strong th:text="${invoice.invoiceNumber}">INV</strong><span th:text="${#temporals.format(invoice.issuedAt, 'dd MMM yyyy')}">Date</span></div>
+        </header>
+        <div class="invoice-document-rule"></div>
+        <div class="invoice-info-grid">
+            <section><span class="eyebrow">CUSTOMER</span><strong th:text="${customer != null ? customer.fullName : 'RentEase customer'}">Customer</strong><span th:text="${customer != null ? customer.email : ''}"></span></section>
+            <section th:if="${reservation != null and vehicle != null}"><span class="eyebrow">RESERVATION</span><strong th:text="'#' + ${reservation.id}">Reservation</strong><span th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle</span></section>
+            <section th:unless="${reservation != null and vehicle != null}"><span class="eyebrow">RENTAL RECORD</span><strong>Details unavailable</strong><span>This historical invoice has no linked reservation record.</span></section>
+        </div>
+        <section class="invoice-rental-section" th:if="${reservation != null and vehicle != null}">
+            <span class="eyebrow">RENTAL INFORMATION</span>
+            <dl class="invoice-facts">
+                <div><dt>Vehicle</dt><dd th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle</dd></div>
+                <div><dt>Pickup date</dt><dd th:text="${#temporals.format(reservation.startDate, 'dd MMM yyyy')}">Date</dd></div>
+                <div><dt>Return date</dt><dd th:text="${#temporals.format(reservation.endDate, 'dd MMM yyyy')}">Date</dd></div>
+                <div><dt>Pickup location</dt><dd th:text="${reservation.pickupLocation}">Pickup</dd></div>
+                <div><dt>Drop-off location</dt><dd th:text="${reservation.dropoffLocation}">Drop-off</dd></div>
+            </dl>
+        </section>
+        <section class="invoice-rental-section" th:unless="${reservation != null and vehicle != null}"><span class="eyebrow">RENTAL INFORMATION</span><p class="payment-security-note">The payment record is intact, but its linked reservation or vehicle is not available in the current database.</p></section>
+        <section class="invoice-rental-section invoice-payment-meta">
+            <span class="eyebrow">PAYMENT INFORMATION</span>
+            <div><span>Method</span><strong th:text="${invoice.payment.method}">Card</strong></div>
+            <div><span>Status</span><strong class="invoice-paid-status" th:text="${invoice.payment.status}">SUCCESS</strong></div>
+            <div><span>Transaction reference</span><strong th:text="${invoice.payment.transactionReference}">TXN</strong></div>
+        </section>
+        <table class="spec-table invoice-totals">
+            <tbody>
+            <tr><th>Rental amount</th><td th:text="'LKR ' + ${#numbers.formatDecimal(invoice.baseAmount, 1, 2)}">LKR</td></tr>
+            <tr><th>Service fees</th><td th:text="'LKR ' + ${#numbers.formatDecimal(invoice.feesAmount, 1, 2)}">LKR</td></tr>
+            <tr><th>Discount</th><td th:text="'- LKR ' + ${#numbers.formatDecimal(invoice.discountAmount, 1, 2)}">LKR</td></tr>
+            <tr class="total-row"><th>Total paid</th><td th:text="'LKR ' + ${#numbers.formatDecimal(invoice.totalAmount, 1, 2)}">LKR</td></tr>
+            </tbody>
+        </table>
+        <footer class="invoice-document-footer">Thank you for choosing RentEase. We look forward to being part of your journey.</footer>
+    </article>
+    <div class="invoice-actions"><button class="btn btn-primary" type="button" onclick="window.print()">Print / Save Invoice</button><a class="btn btn-secondary" th:href="@{/reservation/dashboard}">View My Trips</a><a class="invoice-continue-link" th:href="@{/booking}">Continue exploring&nbsp; →</a></div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

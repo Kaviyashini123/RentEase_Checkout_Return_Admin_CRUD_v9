@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="page-head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title} + ' · RentEase'">RentEase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/premium.css}">
+    <link rel="stylesheet" th:href="@{/css/animation-system.css}">
+    <script type="importmap">
+        {"imports":{"three":"/js/vendor/three.module.js"}}
+    </script>
+    <script th:src="@{/js/validation.js}" defer></script>
+    <script th:src="@{/js/animation-system.js}" defer></script>
+</head>
+<body>
+<header th:fragment="navbar(active)" class="navbar">
+    <div class="navbar-inner">
+        <a th:replace="~{fragments/layout :: brand(@{/booking}, '')}"></a>
+        <nav class="navlinks" aria-label="Main navigation" th:if="${session != null and session.currentUser != null and !session.currentUser.admin}">
+            <a th:href="@{/booking}" th:classappend="${active == 'booking'} ? 'active'">Explore fleet</a>
+            <a th:href="@{/reservation/dashboard}" th:classappend="${active == 'reservation'} ? 'active'">My trips</a>
+            <a th:href="@{/reports/review}" th:classappend="${active == 'reports'} ? 'active'">Share feedback</a>
+        </nav>
+        <nav class="navlinks navlinks-ops" aria-label="Operations navigation" th:if="${session != null and session.currentUser != null and session.currentUser.admin}">
+            <a th:href="@{/reports/dashboard}" th:classappend="${active == 'reports'} ? 'active'">Overview</a>
+            <a th:href="@{/reports/studio}" th:classappend="${active == 'studio'} ? 'active'">Report Studio</a>
+            <a th:href="@{/booking/manage}" th:classappend="${active == 'booking'} ? 'active'">Fleet</a>
+            <a th:href="@{/reservation/dashboard}" th:classappend="${active == 'reservation'} ? 'active'">Reservations</a>
+            <a th:href="@{/payment/manage}" th:classappend="${active == 'payment'} ? 'active'">Payments</a>
+            <a th:href="@{/checkout/manage}" th:classappend="${active == 'checkout'} ? 'active'">Vehicle operations</a>
+            <a th:href="@{/reports/reviews}" th:classappend="${active == 'reviews'} ? 'active'">Reviews</a>
+        </nav>
+        <div class="nav-user" th:if="${session != null and session.currentUser != null}">
+            <span class="user-chip"
+                  th:classappend="${session.currentUser.admin} ? 'user-chip-admin'"
+                  th:text="${session.currentUser.displayName + (session.currentUser.admin ? ' (Admin)' : '')}"></span>
+            <a class="btn btn-sm nav-signout" th:href="@{/logout}">Sign out</a>
+        </div>
+        <div class="nav-user" th:if="${session == null or session.currentUser == null}">
+            <a class="btn btn-sm btn-primary" th:href="@{/login}">Sign In</a>
+        </div>
+    </div>
+</header>
+<a th:fragment="brand(destination, extraClass)" class="brand" th:classappend="${extraClass}" th:href="${destination}" aria-label="RentEase home">
+    <svg class="brand-symbol" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path d="M7 25V7h8.7a6 6 0 0 1 0 12H7m9 0 9 6" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11.2 11h4.4a2 2 0 0 1 0 4h-4.4" fill="none" stroke="#d8b675" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="m19.3 23.5 2.2 1.5" fill="none" stroke="#d8b675" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-wordmark">RentEase</span>
+</a>
+<footer th:fragment="footer" class="site-footer">
+    <div class="footer-inner"><a th:replace="~{fragments/layout :: brand(@{/booking}, '')}"></a><span>Considered journeys, made simple.</span><a th:href="@{/booking}">Explore the fleet&nbsp; →</a></div>
+</footer>
+</body>
+</html>

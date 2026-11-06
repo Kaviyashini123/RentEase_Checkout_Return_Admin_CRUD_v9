@@ -1,0 +1,11 @@
+RentEase login vehicle
+
+Model: Car Concept
+Creator/rights holder: Darmstadt Graphics Group GmbH (DGG)
+Distribution license: Creative Commons Attribution 4.0 International (CC BY 4.0)
+Asset source: https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+License: https://creativecommons.org/licenses/by/4.0/
+
+The DGG model and textures are redistributed under CC BY 4.0. The model includes Khronos/3D Commerce marks; those marks and associated trademarks are excluded from the model license and are not RentEase branding. Do not reuse those marks as RentEase marks.
+
+The Three.js runtime and GLTFLoader in ../js/vendor are distributed under the MIT License. See THREE-LICENSE.txt.

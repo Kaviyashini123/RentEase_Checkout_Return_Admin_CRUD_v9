@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Sign In')}"></head>
+<body>
+    <script type="module" th:src="@{/js/auth-3d-scene.js}"></script>
+
+<main class="auth-shell auth-shell-cinematic">
+    <section class="auth-scene" aria-label="RentEase premium automotive experience">
+        <div class="auth-scene-image" aria-hidden="true">
+            <img th:src="@{/images/vehicles/tesla-model-3.jpg}" alt="" fetchpriority="high"/>
+        </div>
+        <div class="auth-vehicle-stage" data-scene="customer" data-model-src="/images/models/rentease-sedan.glb" aria-label="Interactive 3D premium sedan">
+            <canvas class="auth-vehicle-canvas" aria-hidden="true"></canvas>
+            <span class="auth-vehicle-status" aria-live="polite">Preparing the vehicle</span>
+        </div>
+        <div class="auth-light-trails" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="auth-scene-copy">
+            <span class="auth-scene-kicker auth-mobility-mark">RENT EASE <i>·</i> MOBILITY</span>
+            <span class="auth-scene-kicker auth-welcome-mark">WELCOME TO</span>
+            <h1>RentEase<span>.</span></h1>
+            <p class="auth-scene-line">Drive beyond the ordinary.</p>
+            <p class="auth-scene-support">Premium mobility, built around your journey.</p>
+            <div class="auth-scene-foot"><span>YOUR NEXT JOURNEY STARTS HERE</span><span class="scene-scroll-mark" aria-hidden="true">↓</span></div>
+        </div>
+        <a class="auth-model-credit" href="https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept" target="_blank" rel="noopener noreferrer">Car Concept by DGG · CC BY 4.0</a>
+    </section>
+    <div class="auth-card">
+
+        <a th:replace="~{fragments/layout :: brand(@{/login}, 'auth-brand')}"></a>
+        <span class="auth-badge auth-badge-user">Customer Portal</span>
+
+        <h2>Welcome back<span class="heading-period">.</span></h2>
+        <p class="page-sub">Sign in to browse vehicles, manage bookings and view invoices.</p>
+
+        <div class="error-banner" th:if="${error}" th:text="${error}"></div>
+        <div class="alert-box" th:if="${info}" th:text="${info}"></div>
+
+        <form id="user-login-form" method="post" th:action="@{/login}" novalidate>
+            <label>Email Address
+                <input type="email" name="email" th:value="${email}"
+                       placeholder="you@example.com" autocomplete="username" autofocus required/>
+            </label>
+            <label>Password
+                <input type="password" name="password"
+                       placeholder="Enter your password" autocomplete="current-password" required/>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Continue to RentEase&nbsp; →</button>
+        </form>
+
+        <p class="auth-alt">
+            New to RentEase? <a th:href="@{/register}">Create an account</a>
+        </p>
+
+        <div class="auth-divider"><span>Staff member?</span></div>
+        <a class="btn btn-secondary btn-block" th:href="@{/admin/login}">Go to Admin Portal</a>
+
+        <p class="auth-hint">
+            Demo customer login &mdash; <code>user@rentease.lk</code> / <code>User@123</code>
+        </p>
+    </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Feedback Received')}"></head>
+<body class="reports-page">
+<header th:replace="~{fragments/layout :: navbar('reports')}"></header>
+<main class="container review-success-page">
+    <section class="review-success-card reveal" aria-live="polite">
+        <span class="review-success-mark" aria-hidden="true">✓</span>
+        <span class="eyebrow" th:text="${feedbackAlreadyReceived} ? 'FEEDBACK ALREADY RECEIVED' : 'REVIEW SUBMITTED'">REVIEW SUBMITTED</span>
+        <h1 th:text="${feedbackAlreadyReceived} ? 'You’ve already shared this journey.' : 'Thank you for sharing your experience.'">Thank you for sharing your experience.</h1>
+        <p th:text="${feedbackAlreadyReceived} ? 'Your feedback for this completed reservation is already recorded in the RentEase review system.' : 'Your feedback helps RentEase maintain the highest standard of vehicle quality and service.'">Your feedback helps RentEase maintain the highest standard of vehicle quality and service.</p>
+        <article class="review-success-context" th:if="${reservation != null}">
+            <div class="review-success-vehicle-image">
+                <img th:if="${vehicleImage != null or (vehicle != null and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl))}" th:src="${vehicleImage != null ? vehicleImage : vehicle.imageUrl}" th:alt="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle'}" data-review-vehicle-image/>
+                <span data-review-image-fallback th:if="${vehicle == null or (vehicleImage == null and (vehicle.imageUrl == null or #strings.isEmpty(vehicle.imageUrl)))}">YOUR JOURNEY</span>
+                <span data-review-image-fallback hidden>YOUR JOURNEY</span>
+            </div>
+            <div>
+                <div class="review-context-meta-top">
+                    <span class="eyebrow" th:text="${vehicle != null and vehicle.type != null ? vehicle.type : 'COMPLETED JOURNEY'}">COMPLETED JOURNEY</span>
+                    <span class="review-reservation-badge" th:text="'RESERVATION · #' + ${reservation.id}">RESERVATION · #1</span>
+                </div>
+                <h2 th:text="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle #' + reservation.vehicleId}">Vehicle</h2>
+                <p><time data-review-date th:text="${reservation.startDate}"></time><span aria-hidden="true"> → </span><time data-review-date th:text="${reservation.endDate}"></time></p>
+                <p><span th:text="${reservation.pickupLocation != null and !#strings.isEmpty(reservation.pickupLocation) ? reservation.pickupLocation : 'Pickup not specified'}">Pickup</span><span aria-hidden="true"> → </span><span th:text="${reservation.dropoffLocation != null and !#strings.isEmpty(reservation.dropoffLocation) ? reservation.dropoffLocation : 'Drop-off not specified'}">Drop-off</span></p>
+            </div>
+        </article>
+        <div class="review-success-actions">
+            <a class="btn btn-primary" th:href="@{/reservation/dashboard#my-trips}">Back to My Trips</a>
+            <a class="btn btn-secondary" th:href="@{/booking}">Explore the fleet&nbsp; →</a>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

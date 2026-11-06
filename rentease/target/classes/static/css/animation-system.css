@@ -1,0 +1,156 @@
+/* ==========================================================================
+   RentEase Motion System
+   A reusable, framework-free animation layer for Thymeleaf pages.
+   ========================================================================== */
+
+:root {
+  --motion-fast: 160ms;
+  --motion-base: 420ms;
+  --motion-slow: 720ms;
+  --motion-ease: cubic-bezier(.22, .8, .24, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body.motion-enabled { position: relative; overflow-x: hidden; }
+body.motion-enabled > * { position: relative; z-index: 1; }
+
+body.motion-enabled::before,
+body.motion-enabled::after {
+  content: "";
+  position: fixed;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(70px);
+  opacity: .16;
+  animation: ambient-drift 14s ease-in-out infinite alternate;
+}
+
+body.motion-enabled::before { top: -18rem; left: -12rem; background: var(--cyan); }
+body.motion-enabled::after { right: -16rem; top: 28rem; background: var(--violet); animation-delay: -6s; }
+
+@keyframes ambient-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(30px, 22px, 0) scale(1.08); }
+}
+
+.motion-page-enter { animation: page-enter var(--motion-slow) var(--motion-ease) both; }
+.motion-page-leaving { animation: page-exit 180ms ease both; }
+
+@keyframes page-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes page-exit { from { opacity: 1; transform: translateY(0); } to { opacity: .82; transform: translateY(-4px); } }
+
+.motion-reveal {
+  opacity: 0;
+  transform: translateY(22px) scale(.985);
+  transition: opacity var(--motion-slow) var(--motion-ease), transform var(--motion-slow) var(--motion-ease);
+}
+.motion-reveal.is-visible { opacity: 1; transform: none; }
+
+.motion-stagger > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 560ms var(--motion-ease), transform 560ms var(--motion-ease);
+}
+.motion-stagger.is-visible > * { opacity: 1; transform: none; }
+.motion-stagger.is-visible > *:nth-child(1) { transition-delay: 40ms; }
+.motion-stagger.is-visible > *:nth-child(2) { transition-delay: 100ms; }
+.motion-stagger.is-visible > *:nth-child(3) { transition-delay: 160ms; }
+.motion-stagger.is-visible > *:nth-child(4) { transition-delay: 220ms; }
+.motion-stagger.is-visible > *:nth-child(5) { transition-delay: 280ms; }
+.motion-stagger.is-visible > *:nth-child(6) { transition-delay: 340ms; }
+.motion-stagger.is-visible > *:nth-child(n+7) { transition-delay: 400ms; }
+
+.navbar { animation: navbar-drop 620ms var(--motion-ease) both; }
+.navlinks a {
+  position: relative;
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+.navlinks a::after {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; bottom: 3px; height: 2px;
+  border-radius: 99px; background: var(--gradient);
+  transform: scaleX(0); transform-origin: center;
+  transition: transform 260ms var(--motion-ease);
+}
+.navlinks a:hover { transform: translateY(-1px); }
+.navlinks a.active::after { transform: scaleX(1); }
+@keyframes navbar-drop { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
+.btn {
+  position: relative; overflow: hidden; isolation: isolate;
+  transition: transform 180ms var(--motion-ease), box-shadow 180ms ease, filter 180ms ease, background 180ms ease;
+}
+.btn::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.18) 50%, transparent 75%);
+  transform: translateX(-130%); transition: transform 520ms ease; pointer-events: none; z-index: -1;
+}
+.btn:hover::before { transform: translateX(130%); }
+.btn:hover { box-shadow: 0 10px 26px rgba(0,0,0,.22); }
+.btn:active { transform: translateY(1px) scale(.985); }
+.motion-ripple {
+  position: absolute; width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(255,255,255,.36); transform: translate(-50%, -50%) scale(0);
+  pointer-events: none; animation: ripple 520ms ease-out forwards;
+}
+@keyframes ripple { to { opacity: 0; transform: translate(-50%, -50%) scale(18); } }
+
+.vehicle-card, .card, .panel, .summary-box, .stat-card, .review-item, .invoice-sheet, .auth-card, .filter-form, .mock-card-fields {
+  transition: transform 360ms var(--motion-ease), border-color 220ms ease, box-shadow 360ms var(--motion-ease);
+}
+.vehicle-card:hover, .card:hover, .panel:hover, .summary-box:hover, .invoice-sheet:hover, .auth-card:hover, .filter-form:hover {
+  border-color: rgba(255,255,255,.14); box-shadow: 0 18px 48px rgba(0,0,0,.22);
+}
+.vehicle-card { position: relative; }
+.vehicle-card img { transition: transform 700ms var(--motion-ease), filter 500ms ease; }
+.vehicle-card:hover img { transform: scale(1.035); filter: saturate(1.08) brightness(1.04); }
+
+.metric-card::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit;
+  background: linear-gradient(120deg, rgba(34,211,238,.18), transparent 34%, rgba(167,139,250,.14));
+  opacity: 0; transition: opacity 400ms ease; pointer-events: none;
+}
+.metric-card:hover::before { opacity: 1; }
+.vehicle-card:hover::after, .metric-card:hover::after, .review-preview:hover::after, .review-summary-card:hover::after { opacity: 1; }
+
+.vehicle-card::after, .metric-card::after, .review-preview::after, .review-summary-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(255,255,255,.08), transparent 34%);
+  transition: opacity 260ms ease;
+}
+
+input, select, textarea { transition: border-color 220ms ease, box-shadow 220ms ease, transform 180ms ease, background 220ms ease; }
+input:focus, select:focus, textarea:focus { transform: translateY(-1px); }
+
+.motion-shimmer {
+  background: linear-gradient(100deg, var(--surface) 30%, var(--tile) 50%, var(--surface) 70%);
+  background-size: 220% 100%; animation: shimmer 1.35s linear infinite;
+}
+@keyframes shimmer { to { background-position: -220% 0; } }
+
+.toast, .alert, .alert-box, .error-banner { animation: notification-in 500ms var(--motion-ease) both; }
+@keyframes notification-in { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.star-picker button { transform-origin: center; }
+.star-picker button:hover { animation: star-pop 360ms var(--motion-ease); }
+@keyframes star-pop { 50% { transform: scale(1.24) rotate(-4deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  body.motion-enabled::before, body.motion-enabled::after, .navbar, .motion-page-enter, .motion-page-leaving, .motion-ripple, .motion-shimmer, .star-picker button:hover { animation: none !important; }
+  .motion-reveal, .motion-stagger > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .btn::before { display: none; }
+}
+
+@media (max-width: 700px) {
+  body.motion-enabled::before, body.motion-enabled::after { width: 22rem; height: 22rem; filter: blur(55px); }
+}

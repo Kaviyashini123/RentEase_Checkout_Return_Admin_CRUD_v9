@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Reservation Dashboard')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('reservation')}"></header>
+
+<main class="container reservation-dashboard" th:classappend="${session.currentUser.admin} ? ' admin-reservation-control' : ' customer-dashboard'" th:attr="data-vehicle-endpoint=@{/api/booking/}">
+    <section class="reservation-confirmation" data-reservation-confirmation hidden aria-live="polite" aria-labelledby="confirmation-title">
+        <div class="confirmation-intro">
+            <span class="eyebrow">RESERVATION REQUESTED</span>
+            <h1 id="confirmation-title">Your journey is one step closer.</h1>
+            <p>Your reservation request has been successfully submitted.</p>
+        </div>
+        <div class="confirmation-layout">
+            <div class="confirmation-vehicle">
+                <div class="confirmation-image"><img data-confirmation-image alt="" hidden/><span data-confirmation-placeholder>PREPARING YOUR JOURNEY</span></div>
+                <div class="confirmation-vehicle-copy">
+                    <span data-confirmation-category class="confirmation-category"></span>
+                    <h2 data-confirmation-name></h2>
+                    <p><strong data-confirmation-rate></strong><span> / day</span></p>
+                </div>
+            </div>
+            <div class="confirmation-summary">
+                <dl class="confirmation-dates">
+                    <div><dt>Start date</dt><dd data-confirmation-start></dd></div>
+                    <div><dt>End date</dt><dd data-confirmation-end></dd></div>
+                    <div><dt>Pickup</dt><dd data-confirmation-pickup></dd></div>
+                    <div><dt>Drop-off</dt><dd data-confirmation-dropoff></dd></div>
+                    <div data-confirmation-total-row hidden><dt>Estimated total</dt><dd data-confirmation-total></dd></div>
+                </dl>
+                <div class="confirmation-status"><span>STATUS</span><strong data-confirmation-status>PENDING</strong><p>Your reservation is currently awaiting confirmation.</p></div>
+                <div class="confirmation-actions"><a class="btn btn-primary" th:href="@{/reservation/dashboard#my-trips}">View my trips</a><a class="confirmation-fleet-link" th:href="@{/booking}">Explore the fleet <span aria-hidden="true">↗</span></a></div>
+                <nav class="reservation-journey-steps confirmation-journey-steps" aria-label="Your rental journey">
+                    <span><b>01</b> Explore</span><span><b>02</b> Choose</span><span><b>03</b> Plan</span><span><b>04</b> Request</span><span class="is-current"><b>05</b> Confirm</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <div th:if="${success}" class="alert success" th:text="${success}"></div>
+    <section class="reservation-ops-intro" th:if="${session.currentUser.admin}">
+        <div>
+            <span class="eyebrow">RENTEASE · RESERVATION CONTROL</span>
+            <h1>Reservation management</h1>
+            <p>Manage every journey from request to confirmation, payment and completion.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/reservation/new}">Create reservation <span aria-hidden="true">+</span></a>
+    </section>
+
+    <div class="page-header journey-page-header" th:unless="${session.currentUser.admin}">
+        <div>
+            <span class="eyebrow" th:text="${session.currentUser.admin} ? 'RENTAL OPERATIONS' : 'YOUR RENTAL JOURNAL'">YOUR RENTAL JOURNAL</span>
+            <h1 th:text="${session.currentUser.admin} ? 'Reservations' : 'Your journeys.'">Your journeys.</h1>
+            <p class="page-sub" th:text="${session.currentUser.admin} ? 'A live view of confirmed plans and incoming rental requests.' : 'Every reservation, all in one place.'">Every reservation, all in one place.</p>
+        </div>
+        <a class="btn btn-primary" th:if="${session.currentUser.admin}" th:href="@{/reservation/new}">Create reservation&nbsp; +</a>
+        <a class="btn btn-primary" th:unless="${session.currentUser.admin}" th:href="@{/booking}">Explore the fleet&nbsp; →</a>
+    </div>
+
+    <section id="my-trips" class="journeys-section" aria-label="Reservation history">
+        <div class="journeys-section-heading" th:unless="${session.currentUser.admin}">
+            <span class="eyebrow">YOUR TRIPS</span>
+            <span class="journeys-count" th:text="${#lists.size(reservations)} + ' JOURNEYS'">YOUR JOURNEYS</span>
+        </div>
+        <div class="journey-trip-list motion-stagger" th:if="${!session.currentUser.admin and !#lists.isEmpty(reservations)}" aria-label="Your reservations">
+            <article class="journey-trip-card" th:each="r : ${reservations}" data-reservation-record data-journey-card
+                     th:attr="data-reservation-id=${r.id},data-vehicle-id=${r.vehicleId},data-start-date=${r.startDate},data-end-date=${r.endDate},data-pickup=${r.pickupLocation},data-dropoff=${r.dropoffLocation},data-status=${r.status},data-estimated-cost=${r.estimatedCost}">
+                <div class="journey-trip-vehicle">
+                    <div class="journey-trip-image"><img data-journey-vehicle-image alt="" hidden/><span data-journey-image-placeholder>RENTEASE · YOUR JOURNEY</span></div>
+                    <div class="journey-trip-vehicle-copy">
+                        <span class="journey-vehicle-category" data-journey-vehicle-category>RENTAL VEHICLE</span>
+                        <a class="journey-vehicle-name" data-journey-vehicle-name th:href="@{/booking/{id}(id=${r.vehicleId})}" th:text="'Vehicle #' + ${r.vehicleId}">Vehicle</a>
+                    </div>
+                </div>
+                <div class="journey-trip-details">
+                    <span class="journey-trip-label">YOUR TRIP</span>
+                    <div class="journey-trip-dates"><time th:text="${r.startDate}"></time><span aria-hidden="true">→</span><time th:text="${r.endDate}"></time></div>
+                    <div class="journey-trip-route"><span th:text="${r.pickupLocation != null and !#strings.isEmpty(r.pickupLocation) ? r.pickupLocation : 'Pickup not specified'}">Pickup</span><span class="journey-route-arrow" aria-hidden="true">→</span><span th:text="${r.dropoffLocation != null and !#strings.isEmpty(r.dropoffLocation) ? r.dropoffLocation : 'Drop-off not specified'}">Drop-off</span></div>
+                </div>
+                <div class="journey-trip-state">
+                    <span class="journey-trip-label">STATUS</span>
+                    <span class="status-badge journey-status" th:text="${activeRentalReservationIds.contains(r.id) ? 'ACTIVE RENTAL' : r.status}" th:attr="data-status=${activeRentalReservationIds.contains(r.id) ? 'ACTIVE RENTAL' : r.status}"></span>
+                </div>
+                <div class="journey-trip-total">
+                    <span class="journey-trip-label">ESTIMATED TOTAL</span>
+                    <strong th:text="${r.estimatedCost != null ? 'LKR ' + #numbers.formatDecimal(r.estimatedCost, 1, 2) : 'Not provided'}">Not provided</strong>
+                </div>
+                <div class="journey-trip-actions">
+                    <form th:if="${(r.status.name() == 'PENDING' or r.status.name() == 'CONFIRMED') and !activeRentalReservationIds.contains(r.id)}" method="post" th:action="@{/reservation/{id}/cancel(id=${r.id})}" class="cancel-reason-form journey-cancel-form" novalidate>
+                        <input type="text" name="reason" placeholder="Reason for cancellation" aria-label="Reason for cancellation" required/>
+                        <button type="submit" class="btn btn-danger btn-sm">Cancel trip</button>
+                    </form>
+                    <a class="btn btn-sm journey-review-action" th:if="${r.status.name() == 'COMPLETED' and !reviewedReservationIds.contains(r.id)}" th:href="@{/reports/review(reservationId=${r.id})}">Give feedback&nbsp; →</a>
+                    <span class="journey-review-submitted" th:if="${r.status.name() == 'COMPLETED' and reviewedReservationIds.contains(r.id)}">Feedback shared</span>
+                    <a class="btn btn-primary btn-sm" th:if="${r.status.name() == 'CONFIRMED' and !successfulPayments.containsKey(r.id)}" th:href="@{/payment/checkout(reservationId=${r.id})}">Proceed to Payment&nbsp; →</a>
+                    <a class="btn btn-secondary btn-sm" th:if="${invoicesByReservation.containsKey(r.id)}" th:href="@{/payment/invoice/{id}(id=${invoicesByReservation.get(r.id).id})}">View Invoice</a>
+                    <a class="journey-no-action" th:if="${successfulPayments.containsKey(r.id) and !invoicesByReservation.containsKey(r.id)}" th:href="@{/payment/checkout(reservationId=${r.id})}">Payment recorded · View payment&nbsp; →</a>
+                    <span class="journey-no-action" th:if="${r.status.name() == 'CANCELLED'}">This reservation is closed.</span>
+                </div>
+            </article>
+        </div>
+        <div th:if="${!session.currentUser.admin and #lists.isEmpty(reservations)}" class="journey-empty-state journey-empty-premium motion-reveal">
+            <span class="eyebrow">YOUR RENTAL JOURNAL</span>
+            <strong>YOUR JOURNEY STARTS HERE</strong>
+            <p>You haven't made a reservation yet.</p>
+            <a class="btn btn-primary" th:href="@{/booking}">Explore the fleet&nbsp; →</a>
+        </div>
+        <section class="reservation-ops-workspace" th:if="${session.currentUser.admin}" aria-label="Reservation control center" th:attr="data-confirm-endpoint=@{/api/reservation/}">
+            <div class="reservation-ops-stats" aria-label="Reservation totals">
+                <article class="reservation-ops-stat reservation-ops-stat-total"><span>Total reservations</span><strong data-count-up th:text="${#lists.size(reservations)}">0</strong><small>All recorded journeys</small></article>
+                <article class="reservation-ops-stat" th:each="status : ${reservationStatuses}" th:classappend="${' state-' + #strings.toLowerCase(status.name())}">
+                    <span th:text="${#strings.replace(status.name(), '_', ' ')}">Status</span><strong data-count-up th:text="${reservationStatusCounts[status.name()]}">0</strong><small>Reservations</small>
+                </article>
+                <article class="reservation-ops-stat state-active"><span>Active rental</span><strong data-count-up th:text="${reservationActiveCount}">0</strong><small>Vehicle handovers in progress</small></article>
+            </div>
+
+            <section class="reservation-pipeline" aria-label="Rental lifecycle overview">
+                <div class="reservation-pipeline-heading"><span class="eyebrow">THE RENTAL LIFECYCLE</span><span>Live from reservation, payment and vehicle operation records</span></div>
+                <ol>
+                    <li><span>01</span><strong>Requested</strong><small th:text="${reservationStatusCounts['PENDING']}">0</small></li>
+                    <li><span>02</span><strong>Confirmed</strong><small th:text="${reservationStatusCounts['CONFIRMED']}">0</small></li>
+                    <li><span>03</span><strong>Paid</strong><small th:text="${reservationPaidCount}">0</small></li>
+                    <li><span>04</span><strong>Active</strong><small th:text="${reservationActiveCount}">0</small></li>
+                    <li><span>05</span><strong>Completed</strong><small th:text="${reservationStatusCounts['COMPLETED']}">0</small></li>
+                </ol>
+            </section>
+
+            <form class="reservation-ops-filters" data-reservation-filters aria-label="Search and filter reservations" onsubmit="return false">
+                <label class="reservation-ops-search"><span class="sr-only">Search reservations</span><input type="search" data-reservation-search placeholder="Search ID, customer, vehicle, registration or route" autocomplete="off"/></label>
+                <label><span class="sr-only">Reservation status</span><select data-reservation-status><option value="">All reservation states</option><option value="ACTIVE">Active rental</option><option th:each="status : ${reservationStatuses}" th:value="${status.name()}" th:text="${#strings.replace(status.name(), '_', ' ')}">Status</option></select></label>
+                <label><span class="sr-only">Payment status</span><select data-payment-status><option value="">All payment states</option><option value="NONE">No payment recorded</option><option th:each="status : ${paymentStatuses}" th:value="${status.name()}" th:text="${status.name() == 'SUCCESS' ? 'PAID' : #strings.replace(status.name(), '_', ' ')}">Payment state</option></select></label>
+                <label><span class="sr-only">Reservation date</span><select data-date-range><option value="">All dates</option><option value="upcoming">Upcoming</option><option value="current">Current</option><option value="past">Past</option></select></label>
+                <p class="reservation-ops-result-count" aria-live="polite"><strong data-reservation-result-count th:text="${#lists.size(reservations)}">0</strong> <span data-reservation-result-label>reservations</span></p>
+                <button class="btn btn-secondary reservation-filter-clear" data-clear-reservation-filters type="button">Clear filters</button>
+            </form>
+
+            <div class="reservation-ops-list" data-reservation-list aria-label="Reservations">
+                <article class="reservation-ops-card" th:each="r : ${reservations}" data-reservation-record data-reservation-card
+                         th:with="vehicle=${reservationVehicles.get(r.id)},customer=${reservationCustomers.get(r.id)},payment=${reservationPayments.get(r.id)},operation=${reservationCheckouts.get(r.id)},active=${activeRentalReservationIds.contains(r.id)}"
+                         th:attr="data-reservation-id=${r.id},data-customer=${customer != null ? customer.fullName : 'Customer ' + r.customerId},data-vehicle=${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle ' + r.vehicleId},data-registration=${vehicle != null ? vehicle.plateNumber : ''},data-pickup=${r.pickupLocation},data-dropoff=${r.dropoffLocation},data-status=${active ? 'ACTIVE' : (r.status != null ? r.status.name() : '')},data-payment-status=${payment == null or payment.status == null ? 'NONE' : payment.status.name()},data-start-date=${r.startDate},data-end-date=${r.endDate},data-active=${active}">
+                    <div class="reservation-ops-card-top">
+                        <span class="reservation-ops-reference" th:text="${'RESERVATION · #' + r.id}">RESERVATION · #000</span>
+                        <span class="reservation-ops-status" th:classappend="${active ? ' status-active' : (r.status != null ? ' status-' + #strings.toLowerCase(r.status.name()) : '')}" th:text="${active ? 'ACTIVE' : (r.status != null ? #strings.replace(r.status.name(), '_', ' ') : 'Status unavailable')}">PENDING</span>
+                    </div>
+                    <div class="reservation-ops-card-main">
+                        <div class="reservation-ops-vehicle">
+                            <div class="reservation-ops-image" th:classappend="${reservationVehicleImages[r.id] == null ? ' image-fallback' : ''}">
+                                <img th:if="${reservationVehicleImages[r.id] != null}" loading="lazy" th:src="${reservationVehicleImages[r.id]}" th:alt="${vehicle.brand + ' ' + vehicle.model}" onerror="this.parentElement.classList.add('image-fallback');this.remove()"/>
+                                <span aria-hidden="true">VEHICLE</span>
+                            </div>
+                            <div><span class="reservation-ops-category" th:text="${vehicle != null and vehicle.type != null ? #strings.replace(vehicle.type.name(), '_', ' ') : 'RENTAL VEHICLE'}">CAR</span><h2 th:text="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle #' + r.vehicleId}">Vehicle name</h2><small th:text="${vehicle != null ? vehicle.plateNumber : 'Vehicle details unavailable'}">Registration</small></div>
+                        </div>
+                        <div class="reservation-ops-fact"><span>Customer</span><strong th:text="${customer != null ? customer.fullName : 'Customer #' + r.customerId}">Customer name</strong><small th:text="${customer != null ? customer.email : 'Customer record unavailable'}">email</small></div>
+                        <div class="reservation-ops-fact reservation-ops-route"><span>Journey</span><strong><span th:text="${r.pickupLocation != null and !#strings.isEmpty(r.pickupLocation) ? r.pickupLocation : 'Pickup not specified'}">Pickup</span><b aria-hidden="true">→</b><span th:text="${r.dropoffLocation != null and !#strings.isEmpty(r.dropoffLocation) ? r.dropoffLocation : 'Drop-off not specified'}">Drop-off</span></strong><small><time th:datetime="${r.startDate}" th:text="${#temporals.format(r.startDate, 'dd MMM yyyy')}">Start</time><b aria-hidden="true">→</b><time th:datetime="${r.endDate}" th:text="${#temporals.format(r.endDate, 'dd MMM yyyy')}">End</time></small></div>
+                        <div class="reservation-ops-fact"><span>Payment</span><strong class="reservation-ops-payment" th:classappend="${' payment-' + #strings.toLowerCase(payment == null or payment.status == null ? 'NONE' : payment.status.name())}" th:text="${payment == null or payment.status == null ? 'Awaiting payment' : (payment.status.name() == 'SUCCESS' ? 'Paid' : #strings.replace(payment.status.name(), '_', ' '))}">Payment</strong><small th:text="${payment != null and payment.method != null ? #strings.replace(payment.method.name(), '_', ' ') : 'No transaction recorded'}">Method</small></div>
+                        <div class="reservation-ops-total"><span>Total estimate</span><strong th:text="${r.estimatedCost != null ? 'LKR ' + #numbers.formatDecimal(r.estimatedCost, 1, 2) : 'Not provided'}">LKR 0.00</strong></div>
+                    </div>
+                    <div class="reservation-ops-actions">
+                        <a class="btn btn-secondary" th:href="@{/reservation/edit/{id}(id=${r.id})}">View / edit details <span aria-hidden="true">↗</span></a>
+                        <th:block th:if="${r.status != null and r.status.name() == 'PENDING'}"><button class="btn btn-primary" type="button" data-confirm-reservation th:attr="data-reservation-id=${r.id}">Confirm reservation <span aria-hidden="true">→</span></button>
+                            <form class="reservation-cancel-form" method="post" th:action="@{/reservation/{id}/cancel(id=${r.id})}"><label><span class="sr-only">Cancellation reason</span><input name="reason" type="text" maxlength="500" placeholder="Cancellation reason" required/></label><button class="btn btn-danger" type="submit">Cancel</button></form></th:block>
+                        <th:block th:if="${r.status != null and r.status.name() == 'CONFIRMED' and !active}">
+                            <a class="btn btn-primary" th:if="${payment != null and payment.status != null and payment.status.name() == 'SUCCESS' and !r.startDate.isAfter(reservationCurrentDate)}" th:href="@{/checkout/handover(reservationId=${r.id})}">Ready for checkout <span aria-hidden="true">→</span></a>
+                            <span class="reservation-ops-next-step" th:unless="${payment != null and payment.status != null and payment.status.name() == 'SUCCESS' and !r.startDate.isAfter(reservationCurrentDate)}" th:text="${payment != null and payment.status != null and payment.status.name() == 'SUCCESS' ? 'Pickup scheduled' : (payment != null and payment.status != null and payment.status.name() == 'FAILED' ? 'Payment failed' : (payment != null and payment.status != null and payment.status.name() == 'REFUNDED' ? 'Payment refunded' : 'Awaiting payment'))}">Awaiting payment</span>
+                        </th:block>
+                        <a class="btn btn-primary" th:if="${active and operation != null}" th:href="@{/checkout/return(checkoutRecordId=${operation.id})}">Process return <span aria-hidden="true">→</span></a>
+                        <span class="reservation-ops-next-step" th:if="${r.status != null and r.status.name() == 'COMPLETED'}">Journey completed</span>
+                        <span class="reservation-ops-next-step is-closed" th:if="${r.status != null and r.status.name() == 'CANCELLED'}">Reservation closed</span>
+                        <form class="reservation-remove-form" method="post" th:action="@{/reservation/{id}/delete(id=${r.id})}" onsubmit="return confirm('Permanently remove this reservation?')"><button class="btn btn-danger btn-sm" type="submit">Remove record</button></form>
+                    </div>
+                </article>
+                <div class="reservation-ops-empty" data-reservation-empty hidden><span class="eyebrow">NO JOURNEYS FOUND</span><h2>No reservations match your current filters.</h2><p>Try adjusting your filters or search.</p><button class="btn btn-secondary" data-clear-reservation-filters type="button">Clear filters <span aria-hidden="true">→</span></button></div>
+                <div class="reservation-ops-empty" th:if="${#lists.isEmpty(reservations)}"><span class="eyebrow">RESERVATION CONTROL</span><h2>No reservations to manage.</h2><p>New customer requests will appear here.</p></div>
+            </div>
+            <p class="reservation-ops-action-message" data-reservation-action-message role="status" aria-live="polite" hidden></p>
+        </section>
+    </section>
+</main>
+
+<script th:src="@{/js/reservation-experience.js}" defer></script>
+<script th:if="${session.currentUser.admin}" th:src="@{/js/admin-reservations.js}" defer></script>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

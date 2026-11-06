@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Finance & Billing')}" ></head>
+<body class="finance-admin-page">
+<header th:replace="~{fragments/layout :: navbar('payment')}"></header>
+<main class="container finance-shell">
+    <section class="finance-hero motion-reveal">
+        <div class="finance-hero-copy">
+            <span class="eyebrow">RENTEASE · FINANCE OPERATIONS</span>
+            <h1>Finance &amp; billing<span>.</span></h1>
+            <p>Track rental payments, follow transaction outcomes and keep every invoice connected to its reservation.</p>
+            <div class="finance-hero-meta"><span><i></i> Transaction ledger</span><span>Local currency · LKR</span></div>
+        </div>
+        <a class="btn btn-primary finance-record-btn" th:href="@{/payment/new}"><span aria-hidden="true">＋</span> Record payment</a>
+    </section>
+
+    <div th:if="${success}" class="alert success finance-alert" role="status" th:text="${success}"></div>
+
+    <section class="finance-kpi-grid" aria-label="Payment summary">
+        <article class="finance-kpi finance-kpi-primary"><div class="finance-kpi-top"><span>Successful payments</span><span class="finance-kpi-icon">↗</span></div><strong id="finance-paid-total">LKR 0.00</strong><small><b id="finance-success-count">0</b> settled transactions</small><div class="finance-kpi-track"><span id="finance-paid-track"></span></div></article>
+        <article class="finance-kpi"><div class="finance-kpi-top"><span>Awaiting settlement</span><span class="finance-kpi-icon">◷</span></div><strong id="finance-pending-total">LKR 0.00</strong><small><b id="finance-pending-count">0</b> pending transactions</small></article>
+        <article class="finance-kpi"><div class="finance-kpi-top"><span>Refunded</span><span class="finance-kpi-icon">↶</span></div><strong id="finance-refunded-total">LKR 0.00</strong><small><b id="finance-refunded-count">0</b> refunded transactions</small></article>
+        <article class="finance-kpi"><div class="finance-kpi-top"><span>Needs review</span><span class="finance-kpi-icon">!</span></div><strong id="finance-attention-count">0</strong><small>Failed or incomplete payments</small></article>
+    </section>
+
+    <section class="finance-ledger-panel">
+        <div class="finance-ledger-heading"><div><span class="eyebrow">TRANSACTION LEDGER</span><h2>Payment records</h2><p>Each entry stays linked to its reservation and invoice history.</p></div><div class="finance-ledger-tools"><button class="btn btn-secondary btn-sm" type="button" id="finance-export">Export CSV&nbsp; ↓</button><a class="btn btn-secondary btn-sm" th:href="@{/payment}">Activity overview&nbsp; ↗</a></div></div>
+        <div class="finance-filter-bar">
+            <label class="finance-search"><span aria-hidden="true">⌕</span><input id="finance-search" type="search" placeholder="Search transaction, reservation, customer…" autocomplete="off" aria-label="Search payments"/></label>
+            <label><span class="sr-only">Filter payment status</span><select id="finance-status-filter"><option value="all">All statuses</option><option value="success">Successful</option><option value="pending">Pending</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></label>
+            <label><span class="sr-only">Filter payment method</span><select id="finance-method-filter"><option value="all">All methods</option><option value="credit_card">Credit card</option><option value="debit_card">Debit card</option><option value="mock_gateway">Mock gateway</option><option value="cash">Cash</option></select></label>
+            <span class="finance-result-count"><strong id="finance-visible-count" th:text="${#lists.size(payments)}">0</strong> records</span>
+        </div>
+        <div class="finance-table-wrap">
+            <table class="finance-table" id="finance-payment-table">
+                <thead><tr><th>Transaction</th><th>Rental reference</th><th>Amount</th><th>Payment method</th><th>Processed</th><th>Status</th><th>Invoice / actions</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${payments}" class="finance-payment-row"
+                    th:attr="data-search=${'#' + p.id + ' ' + (p.transactionReference ?: '') + ' reservation ' + p.reservationId + ' customer ' + p.customerId},data-status=${#strings.toLowerCase(p.status.name())},data-method=${#strings.toLowerCase(p.method != null ? p.method.name() : '')},data-amount=${p.amount},data-payment-id=${p.id},data-reservation-id=${p.reservationId},data-customer-id=${p.customerId},data-reference=${p.transactionReference ?: '—'},data-date=${p.paidAt != null ? #temporals.format(p.paidAt,'yyyy-MM-dd HH:mm') : ''}">
+                    <td><div class="finance-transaction-cell"><span class="finance-transaction-mark" th:classappend="${p.status.name() == 'SUCCESS'} ? ' is-success' : (${p.status.name() == 'FAILED'} ? ' is-failed' : '')" th:text="${p.status.name() == 'SUCCESS' ? '✓' : (p.status.name() == 'REFUNDED' ? '↶' : (p.status.name() == 'FAILED' ? '!' : '◷'))}">✓</span><div><strong th:text="'Payment #' + ${p.id}">Payment #1</strong><small th:text="${p.transactionReference != null and !#strings.isEmpty(p.transactionReference) ? p.transactionReference : 'Reference not assigned'}">TXN-REF</small></div></div></td>
+                    <td><div class="finance-ref-cell"><strong th:text="'Reservation #' + ${p.reservationId}">Reservation #1</strong><small th:text="'Customer #' + ${p.customerId}">Customer #1</small></div></td>
+                    <td class="finance-amount-cell" th:text="'LKR ' + ${#numbers.formatDecimal(p.amount,1,2)}">LKR 0.00</td>
+                    <td><span class="finance-method-label" th:text="${p.method != null ? #strings.replace(p.method.name(),'_',' ') : 'Not specified'}">CREDIT CARD</span></td>
+                    <td><div class="finance-date-cell"><strong th:text="${p.paidAt != null ? #temporals.format(p.paidAt,'dd MMM yyyy') : 'Not processed'}">01 Sep 2026</strong><small th:text="${p.paidAt != null ? #temporals.format(p.paidAt,'HH:mm') : 'Awaiting timestamp'}">09:20</small></div></td>
+                    <td><span class="finance-status-pill" th:classappend="${'status-' + #strings.toLowerCase(p.status.name())}"><i></i><span th:text="${#strings.replace(p.status.name(),'_',' ')}">SUCCESS</span></span></td>
+                    <td><div class="finance-row-actions"><a class="finance-invoice-link" th:if="${invoiceIdsByPayment.containsKey(p.id)}" th:href="@{/payment/invoice/{id}(id=${invoiceIdsByPayment.get(p.id)})}" target="_blank" rel="noopener">View invoice&nbsp; ↗</a><span class="finance-no-invoice" th:unless="${invoiceIdsByPayment.containsKey(p.id)}">No invoice</span><div class="finance-manage-links"><a th:href="@{/payment/edit/{id}(id=${p.id})}">Edit</a><form method="post" th:action="@{/payment/delete/{id}(id=${p.id})}" onsubmit="return confirm('Remove this payment record? This does not reverse an external transaction.');"><button type="submit">Remove</button></form></div></div></td>
+                </tr>
+                <tr id="finance-empty-row" th:if="${#lists.isEmpty(payments)}"><td colspan="7"><div class="finance-empty-state"><span>₨</span><strong>No payment records yet</strong><p>Transactions will appear here as rental payments are recorded.</p><a class="btn btn-primary btn-sm" th:href="@{/payment/new}">Record first payment</a></div></td></tr>
+                </tbody>
+            </table>
+            <div id="finance-filter-empty" class="finance-empty-state" hidden><span>⌕</span><strong>No matching transactions</strong><p>Try a different search term or reset the filters.</p><button type="button" id="finance-reset" class="btn btn-secondary btn-sm">Reset filters</button></div>
+        </div>
+        <div class="finance-ledger-footer"><span>Financial records are displayed from the current RentEase database.</span><span><b id="finance-footer-count" th:text="${#lists.size(payments)}">0</b> total records</span></div>
+    </section>
+    <p class="finance-footnote"><span>ⓘ</span> This project uses a simulated payment workflow. Invoice previews reflect records stored in RentEase; no real card is charged.</p>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/payment-admin.js}" defer></script>
+</body>
+</html>

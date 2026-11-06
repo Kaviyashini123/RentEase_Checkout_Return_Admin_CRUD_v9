@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:with="pageTitle=${vehicle.brand} + ' ' + ${vehicle.model}">
+<head th:replace="~{fragments/layout :: page-head(${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('booking')}"></header>
+
+<main class="container vehicle-details-page" th:classappend="${session.currentUser != null and session.currentUser.admin} ? ' admin-vehicle-details'">
+    <a class="details-back" th:href="@{/booking}"><span aria-hidden="true">←</span> Back to fleet</a>
+
+    <div class="details-page details-showcase">
+        <div class="details-image" th:classappend="${(vehicle.brand == 'Tesla' and vehicle.model == 'Model 3') or (vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl))} ? ' has-image' : ''">
+            <img th:if="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'}"
+                 th:src="@{/images/vehicles/tesla-model-3.jpg}"
+                 th:alt="${vehicle.brand + ' ' + vehicle.model}"
+                 title="Photo by Noah Wulf · Wikimedia Commons · CC BY-SA 3.0"
+                 onerror="this.hidden=true;this.closest('.details-image').classList.add('image-unavailable')"/>
+            <img th:if="${(vehicle.brand != 'Tesla' or vehicle.model != 'Model 3') and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}"
+                 th:src="${vehicle.imageUrl}"
+                 th:alt="${vehicle.brand + ' ' + vehicle.model}"
+                 onerror="this.hidden=true;this.closest('.details-image').classList.add('image-unavailable')"/>
+            <div class="details-image-fallback" role="img" aria-label="Vehicle image unavailable"><span>IMAGE UNAVAILABLE</span></div>
+        </div>
+
+        <section class="details-info" aria-label="Vehicle details">
+            <span class="details-category eyebrow" th:text="${vehicle.type}">Vehicle category</span>
+            <h1 class="details-title" th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle name</h1>
+            <p class="details-year" th:text="${vehicle.manufactureYear} + ' model year'">Model year</p>
+
+            <div class="details-price-block">
+                <div class="details-price"><span class="details-currency">LKR</span><strong th:text="${#numbers.formatDecimal(vehicle.dailyRate, 1, 2)}">0.00</strong><span class="details-per-day">/ day</span></div>
+                <span class="details-availability" th:text="${vehicle.status}">Available</span>
+            </div>
+
+            <div class="details-specs" aria-label="Vehicle specifications">
+                <div class="details-spec"><span>Transmission</span><strong th:text="${vehicle.transmission}">Transmission</strong></div>
+                <div class="details-spec"><span>Fuel</span><strong th:text="${vehicle.fuelType}">Fuel type</strong></div>
+                <div class="details-spec"><span>Seats</span><strong th:text="${vehicle.seatingCapacity}">Seats</strong></div>
+                <div class="details-spec"><span>Location</span><strong th:text="${vehicle.location}">Location</strong></div>
+                <div class="details-spec" th:if="${session.currentUser.admin}"><span>Registration</span><strong th:text="${vehicle.plateNumber}">Registration</strong></div>
+            </div>
+
+            <p class="description details-description" th:text="${vehicle.description}"></p>
+
+            <div class="actions details-actions">
+                <th:block th:if="${session.currentUser != null and session.currentUser.admin}">
+                    <a class="btn btn-primary" th:href="@{/booking/edit/{id}(id=${vehicle.id})}">Edit vehicle</a>
+                    <form method="post" th:action="@{/booking/delete/{id}(id=${vehicle.id})}" onsubmit="return confirm('Remove this vehicle from the fleet?')"><button class="btn btn-danger" type="submit">Remove vehicle</button></form>
+                    <a class="btn btn-secondary" th:href="@{/booking/manage}">Back to fleet operations</a>
+                </th:block>
+                <th:block th:unless="${session.currentUser != null and session.currentUser.admin}">
+                    <a class="btn btn-primary details-booking-cta" th:if="${vehicle.status.name() == 'AVAILABLE'}" th:href="@{/reservation/new(vehicleId=${vehicle.id})}">Book this vehicle&nbsp; →</a>
+                    <span class="btn btn-secondary" th:unless="${vehicle.status.name() == 'AVAILABLE'}" aria-disabled="true">Currently unavailable</span>
+                    <button class="btn btn-secondary details-favorite" th:onclick="'addFavorite(' + ${vehicle.id} + ')'">&#9733; Save vehicle</button>
+                </th:block>
+            </div>
+            <p id="fav-status" class="page-sub details-favorite-status" aria-live="polite"></p>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script th:inline="javascript">
+    function addFavorite(vehicleId) {
+        const customerId = /*[[${session.currentUser.id}]]*/ 0;
+        fetch(`/api/booking/favorites?customerId=${customerId}&vehicleId=${vehicleId}`, { method: 'POST' })
+            .then((res) => {
+                const msg = document.getElementById('fav-status');
+                if (res.ok) {
+                    msg.textContent = 'Added to your favorites list.';
+                    msg.style.color = 'var(--positive)';
+                } else {
+                    msg.textContent = 'Could not save this vehicle to favorites. Please try again.';
+                    msg.style.color = 'var(--negative)';
+                }
+            })
+            .catch(() => {
+                const msg = document.getElementById('fav-status');
+                    msg.textContent = 'Network error while saving to favorites.';
+                msg.style.color = 'var(--negative)';
+            });
+    }
+</script>
+</body>
+</html>

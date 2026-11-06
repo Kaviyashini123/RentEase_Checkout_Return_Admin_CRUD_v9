@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Fleet Management')}"></head>
+<body class="admin-fleet-body">
+<header th:replace="~{fragments/layout :: navbar('booking')}"></header>
+<main class="container admin-fleet-page">
+    <section class="admin-fleet-intro motion-reveal">
+        <div>
+            <span class="eyebrow">RENTEASE · FLEET OPERATIONS</span>
+            <h1>Fleet management</h1>
+            <p>Keep every vehicle ready, accurate and available for every journey.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/booking/new}">Add a vehicle <span aria-hidden="true">+</span></a>
+    </section>
+
+    <div th:if="${success}" class="alert success admin-fleet-alert" role="status" th:text="${success}"></div>
+    <div th:if="${error}" class="alert error admin-fleet-alert" role="alert" th:text="${error}"></div>
+
+    <section class="admin-fleet-stats motion-reveal" aria-label="Fleet summary">
+        <article class="admin-fleet-stat admin-fleet-stat-total">
+            <span>Total fleet</span><strong data-count="true" th:text="${fleetTotal}">0</strong><small>Registered vehicles</small>
+        </article>
+        <article class="admin-fleet-stat" th:each="status : ${vehicleStatuses}" th:classappend="${'status-' + #strings.toLowerCase(status.name())}">
+            <span th:text="${#strings.replace(status.name(), '_', ' ')}">Status</span>
+            <strong data-count="true" th:text="${fleetStatusCounts[status.name()]}">0</strong>
+            <small>Current vehicles</small>
+        </article>
+    </section>
+
+    <section class="admin-fleet-controls motion-reveal" aria-label="Search and filter fleet">
+        <label class="admin-fleet-search"><span aria-hidden="true">⌕</span><span class="sr-only">Search vehicles</span>
+            <input id="fleetSearch" type="search" placeholder="Search name, registration or location" autocomplete="off" />
+        </label>
+        <label><span class="sr-only">Filter by status</span>
+            <select id="fleetStatusFilter"><option value="">All statuses</option><option th:each="status : ${vehicleStatuses}" th:value="${status.name()}" th:text="${#strings.replace(status.name(), '_', ' ')}"></option></select>
+        </label>
+        <label><span class="sr-only">Filter by category</span>
+            <select id="fleetTypeFilter"><option value="">All categories</option><option th:each="type : ${vehicleTypes}" th:value="${type.name()}" th:text="${#strings.replace(type.name(), '_', ' ')}"></option></select>
+        </label>
+        <p class="admin-fleet-result-count" aria-live="polite"><strong id="fleetVisibleCount" th:text="${fleetTotal}">0</strong> vehicles shown</p>
+    </section>
+
+    <section class="admin-fleet-grid" id="adminFleetGrid" aria-label="Vehicles">
+        <article class="admin-vehicle-card motion-reveal" th:each="v : ${vehicles}"
+                 th:attr="data-name=${v.brand + ' ' + v.model},data-registration=${v.plateNumber},data-location=${v.location},data-status=${v.status.name()},data-type=${v.type.name()}">
+            <div class="admin-vehicle-image">
+                <img loading="lazy" th:if="${(v.brand.equalsIgnoreCase('Honda') and v.model.equalsIgnoreCase('Vezel')) or (v.brand.equalsIgnoreCase('BMW') and v.model.contains('5')) or (v.brand.equalsIgnoreCase('Tesla') and v.model.contains('3')) or (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('prius')) or (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('hiace')) or (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('corolla')) or (v.brand.equalsIgnoreCase('Suzuki') and v.model.toLowerCase().contains('wagon')) or (v.brand.equalsIgnoreCase('Nissan') and v.model.toLowerCase().contains('caravan')) or (v.brand.equalsIgnoreCase('Yamaha') and v.model.toLowerCase().contains('fz')) or (v.imageUrl != null and !#strings.isEmpty(v.imageUrl))}"
+                     th:src="${v.brand.equalsIgnoreCase('Honda') and v.model.equalsIgnoreCase('Vezel') ? '/images/vehicles/honda-vezel.jpg' : (v.brand.equalsIgnoreCase('BMW') and v.model.contains('5') ? '/images/vehicles/bmw-5-series.jpg' : (v.brand.equalsIgnoreCase('Tesla') and v.model.contains('3') ? '/images/vehicles/tesla-model-3.jpg' : (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('prius') ? '/images/vehicles/toyota-prius.jpg' : (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('hiace') ? '/images/vehicles/toyota-hiace.jpg' : (v.brand.equalsIgnoreCase('Toyota') and v.model.toLowerCase().contains('corolla') ? '/images/vehicles/toyota-corolla-axio.jpg' : (v.brand.equalsIgnoreCase('Suzuki') and v.model.toLowerCase().contains('wagon') ? '/images/vehicles/suzuki-wagon-r.png' : (v.brand.equalsIgnoreCase('Nissan') and v.model.toLowerCase().contains('caravan') ? '/images/vehicles/nissan-caravan.jpg' : (v.brand.equalsIgnoreCase('Yamaha') and v.model.toLowerCase().contains('fz') ? '/images/vehicles/yamaha-fz-s.jpg' : v.imageUrl))))))))}"
+                     th:alt="${v.brand + ' ' + v.model}" onerror="this.hidden=true;this.parentElement.classList.add('image-unavailable')" />
+                <div class="admin-vehicle-image-fallback" aria-hidden="true"><span>VEHICLE</span><strong>IMAGE UNAVAILABLE</strong></div>
+                <span class="admin-vehicle-status" th:classappend="${'status-' + #strings.toLowerCase(v.status.name())}">
+                    <i aria-hidden="true"></i><span th:text="${#strings.replace(v.status.name(), '_', ' ')}">Available</span>
+                </span>
+            </div>
+            <div class="admin-vehicle-copy">
+                <div class="admin-vehicle-title-row">
+                    <div><span class="admin-vehicle-category" th:text="${#strings.replace(v.type.name(), '_', ' ')}">Category</span>
+                        <h2 th:text="${v.brand + ' ' + v.model}">Vehicle name</h2></div>
+                    <strong class="admin-vehicle-price"><span>LKR</span><span th:text="${#numbers.formatDecimal(v.dailyRate, 1, 2)}">0.00</span><small>/ day</small></strong>
+                </div>
+                <p class="admin-vehicle-registration" th:text="${v.plateNumber + ' · ' + v.manufactureYear}">Registration · year</p>
+                <div class="admin-vehicle-specs">
+                    <span th:text="${v.transmission}">Transmission</span><span th:text="${v.fuelType}">Fuel</span><span th:text="${v.seatingCapacity} + ' seats'">Seats</span>
+                </div>
+                <p class="admin-vehicle-location"><span aria-hidden="true">⌖</span><span th:text="${v.location}">Location</span></p>
+                <div class="admin-vehicle-actions">
+                    <a class="btn btn-secondary" th:href="@{/booking/{id}(id=${v.id})}">Details <span aria-hidden="true">→</span></a>
+                    <a class="btn btn-secondary" th:href="@{/booking/edit/{id}(id=${v.id})}">Edit</a>
+                    <form method="post" th:action="@{/booking/delete/{id}(id=${v.id})}" onsubmit="return confirm('Remove this vehicle from the fleet?')">
+                        <button class="btn btn-danger" type="submit">Remove</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+        <div class="admin-fleet-empty" id="fleetEmptyState" th:if="${#lists.isEmpty(vehicles)}">
+            <span class="eyebrow">FLEET STATUS</span><h2>Your fleet is ready to grow.</h2><p>Add a vehicle to start managing your operations.</p><a class="btn btn-primary" th:href="@{/booking/new}">Add a vehicle <span aria-hidden="true">+</span></a>
+        </div>
+        <div class="admin-fleet-empty" id="fleetFilterEmpty" hidden="hidden">
+            <span class="eyebrow">NO VEHICLES FOUND</span><h2>Try another search or adjust your fleet filters.</h2><button class="btn btn-secondary" id="clearFleetFilters" type="button">Clear filters</button>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/admin-fleet.js}" defer="defer"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Access Denied')}"></head>
+<body>
+
+<main class="auth-shell">
+    <div class="auth-card">
+        <span class="auth-badge auth-badge-denied">403 &mdash; Access Denied</span>
+        <h2>You do not have permission</h2>
+        <p class="page-sub">
+            That screen is limited to RentEase staff accounts. Your account is
+            signed in as a customer.
+        </p>
+
+        <a class="btn btn-primary btn-block" th:href="@{/booking}">Back to Booking</a>
+        <div class="auth-divider"><span>or</span></div>
+        <a class="btn btn-block" th:href="@{/logout}">Sign out and use a staff account</a>
+    </div>
+</main>
+
+</body>
+</html>

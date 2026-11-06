@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Reports Dashboard')}"></head>
+<body class="reports-page">
+<header th:replace="~{fragments/layout :: navbar('reports')}"></header>
+
+<main class="container dashboard-shell ops-command-center">
+    <div class="dashboard-hero ops-hero motion-reveal">
+        <div class="ops-hero-copy">
+            <span class="eyebrow ops-hero-eyebrow">RENTEASE · OPERATIONS</span>
+            <h1 class="ops-hero-title">Business overview</h1>
+            <p class="hero-copy ops-hero-description">Real-time visibility across fleet performance, reservations, payments and customer experience.</p>
+        </div>
+        <div class="ops-hero-right">
+            <span class="system-online"><i></i>SYSTEM ONLINE</span>
+            <div class="hero-actions ops-hero-actions">
+                <a class="btn btn-secondary" th:href="@{/reports/reviews}">View review center&nbsp; →</a>
+                <a class="btn btn-primary" th:href="@{/reports/studio}">Open report center&nbsp; ↗</a>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="toast toast-success" id="server-toast" th:text="${success}"></div>
+
+    <section class="dashboard-toolbar ops-period-bar motion-reveal">
+        <div><span class="toolbar-label">Reporting period</span><strong th:text="${month}">2026-10</strong></div>
+        <form method="get" th:action="@{/reports/dashboard}" class="period-form">
+            <label class="sr-only" for="month">Month</label>
+            <input id="month" type="month" name="month" th:value="${month}"/>
+            <button type="submit" class="btn btn-primary">Apply period</button>
+        </form>
+    </section>
+
+    <section class="ops-snapshot motion-reveal" aria-labelledby="ops-snapshot-title">
+        <div class="ops-section-heading"><div><span class="eyebrow">LIVE OPERATIONS</span><h2 id="ops-snapshot-title">Operations snapshot</h2></div><p>Current system records for the selected period and fleet.</p></div>
+        <div class="stat-cards dashboard-stats ops-snapshot-grid motion-stagger">
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-neutral">↗</div><div class="metric-label">Active rentals</div><div class="stat-value count-up" data-format="integer" th:attr="data-value=${activeRentals}" th:text="${activeRentals}">0</div><div class="metric-note">Vehicles checked out</div></article>
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-green">◉</div><div class="metric-label">Available vehicles</div><div class="stat-value count-up" data-format="integer" th:attr="data-value=${availableVehicles}" th:text="${availableVehicles}">0</div><div class="metric-note">Ready for booking</div></article>
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-neutral">▤</div><div class="metric-label">Reservations</div><div class="stat-value count-up" data-format="integer" th:attr="data-value=${#lists.size(reservations)}" th:text="${#lists.size(reservations)}">0</div><div class="metric-note">All recorded journeys</div></article>
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-gold">₨</div><div class="metric-label">Monthly revenue</div><div class="stat-value count-up ops-metric-currency" data-format="currency" th:attr="data-value=${revenue}" th:text="'LKR ' + ${#numbers.formatDecimal(revenue, 1, 'COMMA', 2, 'POINT')}">LKR 0.00</div><div class="metric-note">Successful payments · <span th:text="${month}">period</span></div></article>
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-neutral">◌</div><div class="metric-label">Fleet utilization</div><div class="stat-value count-up" data-format="percent" th:attr="data-value=${utilization}" th:text="${#numbers.formatDecimal(utilization, 1, 1)} + '%'">0%</div><div class="meter"><span th:style="'width:' + ${utilization} + '%'" class="meter-fill"></span></div></article>
+            <article class="stat-card metric-card ops-metric"><div class="metric-icon ops-icon-green">★</div><div class="metric-label">Customer rating</div><div class="stat-value count-up" data-format="rating" th:attr="data-value=${averageRating}" th:text="${#numbers.formatDecimal(averageRating, 1, 1)} + ' / 5'">0 / 5</div><div class="metric-note"><span th:text="${reviewCount}">0</span> customer reviews</div></article>
+            <article class="stat-card metric-card ops-metric ops-metric-attention"><div class="metric-icon ops-icon-attention">!</div><div class="metric-label">Flagged reviews</div><div class="stat-value count-up" data-format="integer" th:attr="data-value=${flaggedReviewCount}" th:text="${flaggedReviewCount}">0</div><div class="metric-note">Reviews marked for follow-up</div></article>
+        </div>
+    </section>
+
+    <section class="ops-chart-grid ops-primary-grid">
+        <article class="panel ops-panel fleet-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">FLEET STATUS</span><h2>Vehicle availability</h2></div><span class="soft-badge count-up" data-format="integer" th:attr="data-value=${#lists.size(vehicles)}" th:text="${#lists.size(vehicles)} + ' total'">0 total</span></div>
+            <div class="fleet-gauge-layout">
+                <div class="fleet-gauge" th:attr="data-total=${#lists.size(vehicles)}">
+                    <svg viewBox="0 0 120 120" role="img" aria-label="Fleet status distribution">
+                        <circle class="gauge-track" cx="60" cy="60" r="48"></circle>
+                        <circle th:each="segment,iter : ${fleetSegments}" class="gauge-segment" th:classappend="|gauge-${segment.status.toLowerCase()}|" cx="60" cy="60" r="48" th:attr="stroke-dasharray=${segment.dasharray},stroke-dashoffset=${segment.dashoffset},data-count=${segment.count}"></circle>
+                    </svg>
+                    <div class="gauge-center"><span>TOTAL FLEET</span><strong class="count-up" data-format="integer" th:attr="data-value=${#lists.size(vehicles)}" th:text="${#lists.size(vehicles)}">0</strong><small>vehicles</small></div>
+                </div>
+                <div class="fleet-legend">
+                    <div class="fleet-legend-row" th:each="segment : ${fleetSegments}">
+                        <i th:class="'fleet-dot dot-' + ${segment.status.toLowerCase()}"></i><span th:text="${segment.label}">Available</span><strong class="count-up" data-format="integer" th:attr="data-value=${segment.count}" th:text="${segment.count}">0</strong>
+                    </div>
+                    <div class="fleet-util-note"><span>Current utilization</span><b class="count-up" data-format="percent" th:attr="data-value=${utilization}" th:text="${#numbers.formatDecimal(utilization,1,1)} + '%'">0%</b></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel ops-panel revenue-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">REVENUE ANALYTICS</span><h2>Rental revenue</h2><p class="panel-subtitle">Revenue generated from successful rental payments.</p></div><span class="chart-period">12 MONTHS</span></div>
+            <div class="revenue-summary"><strong class="count-up" data-format="currency" th:attr="data-value=${revenue}" th:text="'LKR ' + ${#numbers.formatDecimal(revenue,1,2)}">LKR 0.00</strong><span th:text="'Selected month · ' + ${month}">Selected period</span></div>
+            <div class="revenue-chart" data-revenue-chart>
+                <svg viewBox="0 0 720 230" preserveAspectRatio="none" role="img" aria-label="Monthly successful payment revenue">
+                    <defs><linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4b778" stop-opacity=".22"/><stop offset="100%" stop-color="#d4b778" stop-opacity="0"/></linearGradient></defs>
+                    <g class="chart-grid-lines"><line x1="42" y1="30" x2="710" y2="30"/><line x1="42" y1="82" x2="710" y2="82"/><line x1="42" y1="134" x2="710" y2="134"/><line x1="42" y1="186" x2="710" y2="186"/></g>
+                    <path class="revenue-area" data-revenue-area></path><path class="revenue-line" data-revenue-line></path><g data-revenue-points></g>
+                </svg>
+                <div class="revenue-labels" data-revenue-labels>
+                    <span th:each="point : ${revenueTimeline}" th:classappend="${point.month == month} ? ' is-selected'" th:text="${point.label}" th:attr="data-value=${point.amount},data-label=${point.label},data-month=${point.month}">Oct</span>
+                </div>
+                <div class="chart-tooltip" data-chart-tooltip aria-live="polite"></div>
+            </div>
+            <div class="chart-empty" data-revenue-empty hidden>No successful payment revenue is recorded in this 12-month window.</div>
+        </article>
+    </section>
+
+    <section class="ops-chart-grid ops-secondary-grid">
+        <article class="panel ops-panel reservations-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">RESERVATION ACTIVITY</span><h2>Journey demand</h2></div><span class="chart-period" th:text="${month}">Month</span></div>
+            <div class="reservation-legend"><span th:each="status : ${reservationStatuses}" th:class="'legend-' + ${status.name().toLowerCase()}" th:text="${status.name().toLowerCase().replace('_',' ')}">Status</span></div>
+            <div class="reservation-chart">
+                <div class="reservation-column" th:each="point,stat : ${reservationTimeline}" th:attr="data-total=${point.total}">
+                    <div class="reservation-bar-stack" th:attr="aria-label=${point.label} + ': ' + ${point.total} + ' reservations'">
+                        <span th:each="segment : ${point.segments}" th:if="${segment.count > 0}" th:class="'reservation-bar bar-' + ${segment.status.toLowerCase()}" th:style="'height:' + ${segment.count * 100 / maxReservations} + '%;transition-delay:' + ${stat.index * 65} + 'ms'" th:attr="title=${point.label} + ' · ' + ${segment.status.toLowerCase().replace('_',' ')} + ': ' + ${segment.count}"></span>
+                    </div>
+                    <span class="reservation-month" th:text="${point.label}">Oct</span>
+                    <small class="count-up" data-format="integer" th:attr="data-value=${point.total}" th:text="${point.total}">0</small>
+                </div>
+            </div>
+            <div class="chart-empty" th:if="${#lists.isEmpty(reservations)}">Reservation activity will appear when journeys are recorded.</div>
+        </article>
+
+        <article class="panel ops-panel vehicle-performance-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">VEHICLE PERFORMANCE</span><h2>Top completed rentals</h2></div><span class="soft-badge">Completed</span></div>
+            <div class="performer-list" th:if="${!#lists.isEmpty(topVehicles)}">
+                <article class="performer-row" th:each="item,stat : ${topVehicles}">
+                    <span class="performer-rank" th:text="${stat.count < 10 ? '0' + stat.count : stat.count}">01</span>
+                    <div class="performer-image">
+                        <img th:if="${item.vehicle != null && item.vehicle.imageUrl != null && !#strings.isEmpty(item.vehicle.imageUrl)}" th:src="${item.vehicle.imageUrl}" th:alt="${item.vehicle.brand} + ' ' + ${item.vehicle.model}" loading="lazy"/>
+                        <span th:if="${item.vehicle == null || item.vehicle.imageUrl == null || #strings.isEmpty(item.vehicle.imageUrl)}">RE</span>
+                    </div>
+                    <div class="performer-info">
+                        <strong th:if="${item.vehicle != null}" th:text="${item.vehicle.brand} + ' ' + ${item.vehicle.model}">Vehicle</strong>
+                        <strong th:if="${item.vehicle == null}" th:text="'Vehicle #' + ${item.vehicleId}">Vehicle</strong>
+                        <span th:if="${item.vehicle != null}" th:text="${item.vehicle.type != null ? item.vehicle.type.name().replace('_',' ') : 'Vehicle'}">Type</span>
+                        <div class="performer-track"><i th:style="'width:' + ${item.percent} + '%'" class="rank-fill"></i></div>
+                    </div>
+                    <b class="performer-count count-up" data-format="integer" th:attr="data-value=${item.count}" th:text="${item.count} + ' rentals'">0 rentals</b>
+                </article>
+            </div>
+            <div class="empty-state compact" th:if="${#lists.isEmpty(topVehicles)}">Completed rental performance will appear here.</div>
+        </article>
+    </section>
+
+    <section class="ops-chart-grid ops-secondary-grid">
+        <article class="panel ops-panel lifecycle-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">RENTAL OPERATIONS</span><h2>Journey lifecycle</h2></div><span class="soft-badge">Live record counts</span></div>
+            <div class="lifecycle-flow">
+                <div class="lifecycle-step" th:each="step,stat : ${lifecycle}" th:classappend="${step.kind}">
+                    <span class="lifecycle-index" th:text="${stat.count < 10 ? '0' + stat.count : stat.count}">01</span><span class="lifecycle-name" th:text="${step.label}">Reserved</span><strong class="count-up" data-format="integer" th:attr="data-value=${step.count}" th:text="${step.count}">0</strong>
+                </div>
+            </div>
+            <p class="lifecycle-caption">Counts reflect each module's own current records; stages are not inferred from one another.</p>
+        </article>
+
+        <article class="panel ops-panel payments-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">PAYMENT OVERVIEW</span><h2>Payment health</h2></div><span class="soft-badge count-up" data-format="integer" th:attr="data-value=${paymentCount}" th:text="${paymentCount} + ' payments'">0 payments</span></div>
+            <div class="payment-totals"><div><span>Total paid</span><strong class="count-up" data-format="currency" th:attr="data-value=${paidTotal}" th:text="'LKR ' + ${#numbers.formatDecimal(paidTotal,1,2)}">LKR 0.00</strong></div><div><span>Pending amount</span><strong class="count-up" data-format="currency" th:attr="data-value=${pendingTotal}" th:text="'LKR ' + ${#numbers.formatDecimal(pendingTotal,1,2)}">LKR 0.00</strong></div></div>
+            <div class="payment-status-list">
+                <div class="payment-status-row" th:each="paymentStatus : ${paymentStatuses}" th:classappend="|payment-${paymentStatus.status.toLowerCase()}|">
+                    <span class="payment-status-mark"></span><span class="payment-status-label" th:text="${paymentStatus.label}">Status</span><strong class="count-up" data-format="integer" th:attr="data-value=${paymentStatus.count}" th:text="${paymentStatus.count}">0</strong><small class="count-up" data-format="currency" th:attr="data-value=${paymentStatus.amount}" th:text="'LKR ' + ${#numbers.formatDecimal(paymentStatus.amount,1,2)}">LKR 0.00</small>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="ops-chart-grid ops-secondary-grid">
+        <article class="panel ops-panel experience-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">CUSTOMER EXPERIENCE</span><h2>Service quality</h2></div><a class="text-link" th:href="@{/reports/reviews}">Review center →</a></div>
+            <div class="experience-score"><strong class="count-up" data-format="decimal" th:attr="data-value=${averageRating}" th:text="${#numbers.formatDecimal(averageRating,1,1)}">0.0</strong><span>/ 5</span><div><span class="stars" th:text="${averageRating >= 4.5 ? '★★★★★' : (averageRating >= 3.5 ? '★★★★☆' : (averageRating >= 2.5 ? '★★★☆☆' : (averageRating >= 1.5 ? '★★☆☆☆' : '★☆☆☆☆')))}">★★★★★</span><small><span class="count-up" data-format="integer" th:attr="data-value=${reviewCount}" th:text="${reviewCount}">0</span> total reviews</small></div></div>
+            <div class="rating-bars">
+                <div class="rating-line" th:each="star : ${#numbers.sequence(5,1,-1)}"><span th:text="${star} + '★'">5★</span><div class="rating-track"><span th:style="'width:' + ${reviewCount > 0 ? (ratingCounts[star-1] * 100 / reviewCount) : 0} + '%'" class="rating-fill"></span></div><strong class="count-up" data-format="integer" th:attr="data-value=${ratingCounts[star-1]}" th:text="${ratingCounts[star-1]}">0</strong></div>
+            </div>
+            <div class="experience-foot"><div><span>Total reviews</span><b class="count-up" data-format="integer" th:attr="data-value=${reviewCount}" th:text="${reviewCount}">0</b></div><div th:classappend="${flaggedReviewCount > 0} ? 'attention' : 'healthy'"><span>Flagged reviews</span><b class="count-up" data-format="integer" th:attr="data-value=${flaggedReviewCount}" th:text="${flaggedReviewCount}">0</b></div></div>
+        </article>
+
+        <article class="panel ops-panel activity-panel motion-reveal">
+            <div class="section-head"><div><span class="eyebrow">OPERATIONS FEED</span><h2>Recent rental activity</h2></div><span class="soft-badge">Latest records</span></div>
+            <div class="activity-list" th:if="${!#lists.isEmpty(recentActivity)}">
+                <article class="activity-item" th:each="event : ${recentActivity}" th:classappend="|activity-${event.kind}|">
+                    <span class="activity-icon" aria-hidden="true" th:text="${event.kind == 'payment' ? '₨' : (event.kind == 'review' ? '★' : (event.kind == 'return' ? '↙' : (event.kind == 'checkout' ? '↗' : '•')))}">•</span>
+                    <div><strong th:text="${event.title}">Activity</strong><span th:text="${event.subject}">Subject</span><small th:text="${event.detail}">Details</small></div>
+                    <time th:datetime="${event.timestamp}" th:text="${#temporals.format(event.timestamp,'dd MMM · HH:mm')}">Today</time>
+                </article>
+            </div>
+            <div class="chart-empty" th:if="${#lists.isEmpty(recentActivity)}">Rental activity will appear as reservations, payments and vehicle operations are recorded.</div>
+        </article>
+    </section>
+
+    <section class="panel ops-feedback-panel motion-reveal">
+        <div class="section-head"><div><span class="eyebrow">CUSTOMER EXPERIENCE</span><h2>Recent feedback</h2></div><a class="btn btn-sm" th:href="@{/reports/reviews}">View review center&nbsp; →</a></div>
+        <div class="review-preview-grid" th:if="${!#lists.isEmpty(reviews)}">
+            <article class="review-preview" th:each="rv : ${reviews}" th:classappend="${rv.flagged} ? 'review-flagged' : ''">
+                <div class="review-topline"><span class="stars" th:text="${'★'.repeat(rv.rating) + '☆'.repeat(5-rv.rating)}">★★★★★</span><span class="status-badge" th:classappend="${rv.flagged} ? 'badge-warning' : 'badge-good'" th:text="${rv.flagged} ? 'Needs attention' : 'Healthy'">Healthy</span></div>
+                <p class="review-quote" th:text="${rv.comment != null && !#strings.isEmpty(rv.comment) ? '“' + rv.comment + '”' : 'No comment provided.'}">“Great experience.”</p>
+                <div class="review-meta"><span>Customer <b th:text="${rv.customerId}">1</b></span><span th:if="${vehicleNames.containsKey(rv.vehicleId)}">Vehicle <b th:text="${vehicleNames[rv.vehicleId]}">Vehicle</b></span><span th:if="${rv.submittedAt != null}" th:text="${#temporals.format(rv.submittedAt,'dd MMM yyyy')}">Date</span></div>
+            </article>
+        </div>
+        <div class="empty-state compact" th:if="${#lists.isEmpty(reviews)}">No customer feedback has been submitted yet.</div>
+    </section>
+
+    <section id="report-center" class="panel report-center ops-report-center motion-reveal">
+        <div class="section-head report-heading"><div><span class="eyebrow">DOCUMENT CENTER</span><h2>Business report summary</h2><p>Quick export shortcut. For full reporting analytics and history, open the <a class="text-link" th:href="@{/reports/studio}">Report Studio →</a></p></div><div class="report-icon">PDF · CSV</div></div>
+        <form id="export-form" method="post" th:action="@{/reports/export}" class="report-form" novalidate>
+            <label>Report type<select name="reportType"><option th:each="t : ${reportTypes}" th:value="${t}" th:text="${t}"></option></select></label>
+            <label>Format<select name="format"><option th:each="f : ${formats}" th:value="${f}" th:text="${f}"></option></select></label>
+            <label>Period<input type="text" name="periodLabel" th:value="${month}" placeholder="e.g. 2026-10" required/></label>
+            <label>Staff ID<input type="text" name="staffId" placeholder="Staff ID" required/></label>
+            <button type="submit" class="btn btn-primary report-submit">Generate report <span>↗</span></button>
+        </form>
+        <div class="export-history" th:if="${!#lists.isEmpty(exportHistory)}"><div class="mini-heading">Recent reports</div><div class="export-row" th:each="exp : ${exportHistory}"><div class="file-icon" th:text="${exp.format}">PDF</div><div class="export-info"><strong th:text="${exp.reportType}">Revenue Report</strong><span th:text="${exp.periodLabel} + ' · ' + ${#temporals.format(exp.generatedAt, 'dd MMM yyyy HH:mm')}">2026-10</span></div><div class="review-export-actions"><a class="btn btn-sm btn-secondary" th:if="${exp.format.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${exp.id},preview=true)}" target="_blank">View PDF</a><a class="btn btn-sm btn-primary" th:if="${exp.format.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${exp.id})}">Download PDF</a><a class="btn btn-sm btn-primary" th:if="${exp.format.name() == 'CSV'}" th:href="@{/reports/export/{id}/csv(id=${exp.id})}">Download CSV</a></div></div></div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Payment & Invoicing')}"></head>
+<body class="payment-page">
+<header th:replace="~{fragments/layout :: navbar('payment')}"></header>
+
+<main class="container payment-shell">
+    <header class="payment-intro reveal">
+        <span class="eyebrow">PAYMENT &amp; INVOICING</span>
+        <h1>Complete your rental payment.</h1>
+        <p class="page-sub">Your reservation is confirmed. Review your journey details and complete this secure simulated payment.</p>
+    </header>
+
+    <div class="alert" th:if="${error}" th:text="${error}" role="alert"></div>
+    <section class="payment-notice motion-reveal" th:if="${blockedMessage != null or alreadyPaid}">
+        <span class="eyebrow" th:text="${alreadyPaid} ? 'PAYMENT COMPLETE' : 'RESERVATION STATUS'">RESERVATION STATUS</span>
+        <h2 th:text="${alreadyPaid ? 'This reservation has already been paid.' : blockedMessage}">Payment is available after confirmation.</h2>
+        <p th:if="${alreadyPaid}">Your successful payment is recorded. You can return to your journey history.</p>
+        <p th:unless="${alreadyPaid}" th:text="${blockedMessage}"></p>
+        <div class="payment-notice-actions">
+            <a class="btn btn-primary" th:href="@{/reservation/dashboard}">View My Trips</a>
+            <a class="btn btn-secondary" th:href="@{/booking}">Explore Fleet</a>
+        </div>
+    </section>
+
+    <div class="payment-layout" th:if="${blockedMessage == null and !alreadyPaid}">
+        <section class="payment-panel rental-summary-panel motion-reveal" aria-labelledby="rental-summary-title">
+            <div class="payment-panel-heading"><span class="eyebrow">YOUR RENTAL</span><span class="payment-reference" th:text="'RESERVATION #' + ${reservation.id}">RESERVATION</span></div>
+            <div class="payment-vehicle-image">
+                <img th:if="${vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}" th:src="${vehicle.imageUrl}" th:alt="${vehicle.brand + ' ' + vehicle.model}" loading="lazy"/>
+                <span th:unless="${vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}">RENTEASE · YOUR JOURNEY</span>
+            </div>
+            <div class="payment-vehicle-copy">
+                <span class="eyebrow" th:text="${vehicle.type}">CATEGORY</span>
+                <h2 id="rental-summary-title" th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle</h2>
+                <span class="payment-status" th:text="${reservation.status}">CONFIRMED</span>
+            </div>
+            <dl class="payment-trip-facts">
+                <div><dt>Dates</dt><dd><time th:text="${#temporals.format(reservation.startDate, 'dd MMM yyyy')}"></time><span> → </span><time th:text="${#temporals.format(reservation.endDate, 'dd MMM yyyy')}"></time></dd></div>
+                <div><dt>Route</dt><dd th:text="${reservation.pickupLocation + ' → ' + reservation.dropoffLocation}">Pickup → Drop-off</dd></div>
+                <div><dt>Duration</dt><dd th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(reservation.startDate, reservation.endDate) + ' days'}">Duration</dd></div>
+                <div><dt>Transmission</dt><dd th:text="${vehicle.transmission}">Transmission</dd></div>
+                <div><dt>Fuel</dt><dd th:text="${vehicle.fuelType}">Fuel</dd></div>
+                <div><dt>Seats</dt><dd th:text="${vehicle.seatingCapacity}">Seats</dd></div>
+            </dl>
+        </section>
+
+        <section class="payment-panel payment-details-panel motion-reveal" aria-labelledby="payment-details-title">
+            <div class="payment-panel-heading"><div><span class="eyebrow">PAYMENT DETAILS</span><h2 id="payment-details-title">Settle your reservation.</h2></div><span class="secure-mark" aria-label="Simulated secure payment">SECURE</span></div>
+            <form id="payment-form" method="post" th:action="@{/payment/checkout}" class="premium-payment-form" novalidate>
+                <input type="hidden" name="reservationId" th:value="${reservation.id}"/>
+                <fieldset class="payment-methods">
+                    <legend>Payment method</legend>
+                    <label class="payment-method-choice"><input type="radio" name="method" value="CREDIT_CARD" required checked/><span>Credit card</span></label>
+                    <label class="payment-method-choice"><input type="radio" name="method" value="DEBIT_CARD" required/><span>Debit card</span></label>
+                </fieldset>
+                <div class="payment-field-grid">
+                    <label class="payment-field payment-field-wide">Cardholder name
+                        <input type="text" data-field="cardholder" autocomplete="cc-name" placeholder="Name on card" required maxlength="100"/>
+                    </label>
+                    <label class="payment-field payment-field-wide">Card number
+                        <input type="text" inputmode="numeric" data-field="cardNumber" autocomplete="cc-number" placeholder="4242 4242 4242 4242" maxlength="19" required/>
+                    </label>
+                    <label class="payment-field">Expiry date
+                        <input type="text" inputmode="numeric" data-field="expiry" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" required/>
+                    </label>
+                    <label class="payment-field">Security code
+                        <input type="password" inputmode="numeric" data-field="cvv" autocomplete="cc-csc" placeholder="•••" maxlength="3" required/>
+                    </label>
+                </div>
+                <p class="payment-security-note"><span aria-hidden="true">◇</span> Simulated checkout. Card details are validated in your browser and are never submitted or stored.</p>
+                <div class="payment-cost-breakdown">
+                    <span class="eyebrow">RENTAL SUMMARY</span>
+                    <div><span>Rental amount</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(baseAmount, 1, 2)}">LKR</strong></div>
+                    <div><span>Service fee</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(feesAmount, 1, 2)}">LKR</strong></div>
+                    <div class="payment-grand-total"><span>Total</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(amount, 1, 2)}">LKR</strong></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block payment-submit">Pay Securely&nbsp; →</button>
+                <p class="payment-disclaimer">No real charge is made. RentEase records this as a simulated payment.</p>
+            </form>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/payment-card.js}" defer></script>
+</body>
+</html>

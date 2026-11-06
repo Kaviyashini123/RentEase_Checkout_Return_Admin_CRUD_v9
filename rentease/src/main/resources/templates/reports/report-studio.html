@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Report Studio')}"></head>
+<body class="reports-page review-intelligence-page report-studio-page">
+<header th:replace="~{fragments/layout :: navbar('studio')}"></header>
+<main class="container review-center-shell report-studio-shell">
+    <section class="review-center-hero report-studio-hero">
+        <div><span class="eyebrow">RENTEASE · BUSINESS INTELLIGENCE</span><h1>Report Studio</h1><p>Turn rental activity into business insight.</p></div>
+        <div class="review-center-hero-actions"><a class="btn btn-secondary" th:href="@{/reports/dashboard}">← Business overview</a><a class="btn btn-secondary" th:href="@{/reports/reviews}">Customer experience →</a></div>
+    </section>
+
+    <div th:if="${success}" class="review-export-notice is-success" role="status" aria-live="polite">
+        <span aria-hidden="true">✓</span><div><strong>EXPORT SAVED</strong><p th:text="${success}">Report export saved.</p></div>
+        <div class="report-ready-actions" th:if="${generatedExportId != null}">
+            <a class="btn btn-secondary btn-sm" th:if="${generatedExportFormat == null or generatedExportFormat.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${generatedExportId},preview=true)}" target="_blank">View PDF&nbsp; ↗</a>
+            <a class="btn btn-primary btn-sm" th:if="${generatedExportFormat != null and generatedExportFormat.name() == 'CSV'}" th:href="@{/reports/export/{id}/csv(id=${generatedExportId})}">Download CSV&nbsp; ↓</a>
+            <a class="btn btn-primary btn-sm" th:if="${generatedExportFormat == null or generatedExportFormat.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${generatedExportId})}">Download PDF&nbsp; ↓</a>
+        </div>
+    </div>
+    <div th:if="${exportError}" class="review-export-notice is-error" role="alert"><span aria-hidden="true">!</span><div><strong>REPORT NOT GENERATED</strong><p th:text="${exportError}">Check the report details and try again.</p></div></div>
+
+    <section class="studio-report-cards" aria-label="Available business reports">
+        <article class="studio-report-card" style="--report-card-order:0"><span class="studio-report-icon" aria-hidden="true">LKR</span><span class="eyebrow">MONTHLY REVENUE</span><h2>Revenue performance</h2><p>Review successful payment revenue for a selected month.</p><strong class="studio-report-metric count-up" data-format="currency" th:attr="data-value=${studioRevenue}" th:text="'LKR ' + ${#numbers.formatDecimal(studioRevenue,1,'COMMA',2,'POINT')}">LKR 0.00</strong><button class="btn btn-secondary" type="button" data-generate-report="MONTHLY_REVENUE">Generate report <span aria-hidden="true">↗</span></button></article>
+        <article class="studio-report-card" style="--report-card-order:1"><span class="studio-report-icon" aria-hidden="true">%</span><span class="eyebrow">VEHICLE UTILIZATION</span><h2>Fleet utilization</h2><p>Current fleet snapshot from pending and confirmed reservations.</p><strong class="studio-report-metric count-up" data-format="percent" th:attr="data-value=${studioUtilization}" th:text="${#numbers.formatDecimal(studioUtilization,1,1)} + '%'">0.0%</strong><button class="btn btn-secondary" type="button" data-generate-report="VEHICLE_UTILIZATION">Generate report <span aria-hidden="true">↗</span></button></article>
+        <article class="studio-report-card" style="--report-card-order:2"><span class="studio-report-icon" aria-hidden="true">01</span><span class="eyebrow">MOST RENTED VEHICLES</span><h2>Rental ranking</h2><p>Top five vehicles across all recorded reservation history.</p><strong class="studio-report-metric"><span class="count-up" data-format="integer" th:attr="data-value=${studioRankedVehicleCount}" th:text="${studioRankedVehicleCount}">0</span> ranked</strong><button class="btn btn-secondary" type="button" data-generate-report="MOST_RENTED_VEHICLES">Generate report <span aria-hidden="true">↗</span></button></article>
+        <article class="studio-report-card" style="--report-card-order:3"><span class="studio-report-icon" aria-hidden="true">★</span><span class="eyebrow">RATING ANALYSIS</span><h2>Customer experience</h2><p>All submitted review ratings across available history.</p><strong class="studio-report-metric"><span class="count-up" data-format="rating" th:attr="data-value=${studioAverageRating}" th:text="${#numbers.formatDecimal(studioAverageRating,1,1)}">0.0</span> / 5 · <span class="count-up" data-format="integer" th:attr="data-value=${studioReviewCount}" th:text="${studioReviewCount}">0</span> reviews</strong><button class="btn btn-secondary" type="button" data-generate-report="RATING_ANALYSIS">Generate report <span aria-hidden="true">↗</span></button></article>
+    </section>
+
+    <section class="report-studio-layout" aria-label="Report builder and live preview">
+        <article class="review-intel-panel report-builder-panel">
+            <div class="review-panel-heading"><div><span class="eyebrow">REPORT STUDIO</span><h2>Build an operational report</h2><p>Revenue uses the selected month. Utilization is a current snapshot; rankings and ratings use all recorded history.</p></div><span class="report-icon">PDF · CSV</span></div>
+            <form id="review-export-form" class="review-report-form report-studio-form" method="post" th:action="@{/reports/export}">
+                <input type="hidden" name="returnTo" value="studio"/>
+                <label>Report type
+                    <select id="report-type-select" name="reportType" required>
+                        <option th:each="type : ${reportTypes}" th:value="${type}" th:selected="${exportType != null and exportType == type}"
+                                th:text="${type.name() == 'RATING_ANALYSIS' ? 'Rating analysis' : (type.name() == 'MONTHLY_REVENUE' ? 'Monthly revenue' : (type.name() == 'VEHICLE_UTILIZATION' ? 'Vehicle utilization' : 'Most rented vehicles'))}">Report type</option>
+                    </select>
+                </label>
+                <label>Export format<select id="report-format-select" name="format" required><option value="PDF" selected>PDF · presentation-ready document</option><option value="CSV">CSV · spreadsheet and data analysis</option></select><small id="report-format-help" class="report-field-help">PDF preserves the branded layout; CSV provides rows for spreadsheet analysis.</small></label>
+                <label><span id="report-period-label">Reporting month</span><input id="report-period-input" type="month" name="periodLabel" th:value="${exportPeriod != null ? exportPeriod : month}" required/><small id="report-period-help" class="report-field-help">Used to calculate revenue for the selected calendar month.</small></label>
+                <label>Prepared by · Staff ID<input id="report-staff-input" type="text" name="staffId" th:value="${exportStaffId}" placeholder="Enter staff ID" maxlength="80" required/><small class="report-field-help">Recorded in the exported report for accountability.</small></label>
+                <button id="review-export-submit" class="btn btn-primary" type="submit"><span data-submit-label>Generate PDF</span><span aria-hidden="true">↗</span></button>
+            </form>
+
+            <div id="report-generation-stepper" class="report-generation-stepper" hidden role="status" aria-live="polite">
+                <div class="stepper-header"><span class="review-progress-spinner" aria-hidden="true"></span><strong>GENERATING REPORT · Preparing your business report...</strong></div>
+                <ul class="stepper-steps"><li><span class="step-indicator">●</span> Collecting system data...</li><li><span class="step-indicator">○</span> Calculating statistics...</li><li><span class="step-indicator">○</span> Preparing analytics...</li><li><span class="step-indicator">○</span> Preparing selected export...</li></ul>
+            </div>
+            <div id="report-ready-card" class="review-export-notice is-success" hidden role="status" aria-live="polite"><span aria-hidden="true">✓</span><div class="report-ready-meta"><strong>REPORT READY</strong><p id="report-ready-title">Report</p><small id="report-ready-period"></small></div><div class="report-ready-actions"><a id="report-view-link" class="btn btn-secondary btn-sm" target="_blank" href="#">View PDF&nbsp; ↗</a><a id="report-download-link" class="btn btn-primary btn-sm" href="#">Download PDF&nbsp; ↓</a></div></div>
+            <div id="report-error-card" class="review-export-notice is-error" hidden role="alert" aria-live="assertive"><span aria-hidden="true">!</span><div><strong>REPORT NOT GENERATED</strong><p id="report-error-message">Check the report details and try again.</p></div></div>
+        </article>
+
+        <aside class="review-intel-panel report-preview-panel" id="report-preview"
+              th:attr="data-monthly-revenue=${studioRevenue},data-utilization=${studioUtilization},data-ranked-vehicles=${studioRankedVehicleCount},data-average-rating=${studioAverageRating},data-review-count=${studioReviewCount},data-revenue-endpoint=@{/api/reports/revenue}">
+            <span class="eyebrow">REPORT AT A GLANCE</span><div class="report-preview-rule"></div>
+            <p id="report-preview-type" class="report-preview-type">MONTHLY REVENUE</p>
+            <strong id="report-preview-value" class="report-preview-value" th:text="'LKR ' + ${#numbers.formatDecimal(studioRevenue,1,'COMMA',2,'POINT')}">LKR 0.00</strong>
+            <p id="report-preview-detail" class="report-preview-detail" th:text="'Actual successful payments · ' + ${month}">Actual report data</p>
+            <div class="report-preview-foot"><span>PREVIEW FROM CURRENT DATABASE RECORDS</span><span class="report-preview-live"><i></i> DATA-LED</span></div>
+            <div class="report-preview-guidance"><strong>Choose the right output</strong><p id="report-preview-guidance">Use PDF for a formal business review, or CSV to sort, filter and continue analysis in a spreadsheet.</p></div>
+        </aside>
+    </section>
+
+    <section class="review-intel-panel studio-history-panel" id="review-report-history">
+        <div class="review-report-history-heading"><div><span class="eyebrow">DOCUMENT CENTER</span><h2>Recent reports</h2></div><span id="export-history-count" th:text="${#lists.size(exportHistory)} + ' saved exports'">0 saved exports</span></div>
+        <div class="review-report-history-list" id="report-history-list">
+            <article class="review-export-row" th:each="export : ${exportHistory}">
+                <div class="review-export-file-mark" th:text="${export.format}">PDF</div>
+                <div><strong th:text="${export.reportType.name() == 'RATING_ANALYSIS' ? 'Rating analysis' : (export.reportType.name() == 'MONTHLY_REVENUE' ? 'Monthly revenue' : (export.reportType.name() == 'VEHICLE_UTILIZATION' ? 'Vehicle utilization' : 'Most rented vehicles'))}">Report</strong><small><span th:text="${export.periodLabel}">Period</span><span>·</span><time th:if="${export.generatedAt != null}" th:datetime="${export.generatedAt}" th:text="${#temporals.format(export.generatedAt,'dd MMM yyyy · HH:mm')}">Generated</time><span th:text="'· ' + ${export.format}">· PDF</span></small></div>
+                <div class="review-export-actions"><a class="btn btn-secondary btn-sm" th:if="${export.format.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${export.id},preview=true)}" target="_blank">View PDF&nbsp; ↗</a><a class="btn btn-primary btn-sm" th:if="${export.format.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${export.id})}">Download PDF&nbsp; ↓</a><a class="btn btn-primary btn-sm" th:if="${export.format.name() == 'CSV'}" th:href="@{/reports/export/{id}/csv(id=${export.id})}">Download CSV&nbsp; ↓</a></div>
+            </article>
+        </div>
+        <div class="review-report-history-empty" id="report-history-empty" th:if="${#lists.isEmpty(exportHistory)}"><span class="eyebrow">REPORT HISTORY</span><p>Your generated exports will be saved here.</p></div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Customer Experience & Reports')}"></head>
+<body class="reports-page review-intelligence-page">
+<header th:replace="~{fragments/layout :: navbar('reviews')}"></header>
+<main class="container review-center-shell">
+    <section class="review-center-hero motion-reveal">
+        <div><span class="eyebrow">RENTEASE · EXPERIENCE INTELLIGENCE</span><h1>Review Intelligence</h1><p>Turn every customer journey into measurable service insight.</p></div>
+        <div class="review-center-hero-actions"><a class="btn btn-secondary" th:href="@{/reports/dashboard}">← Business overview</a><a class="btn btn-secondary" th:href="@{/reports/studio}">Report Studio&nbsp; ↗</a><a class="btn btn-primary" th:href="@{/reports/review}">Add a review&nbsp; +</a></div>
+    </section>
+
+    <div th:if="${success}" class="review-export-notice is-success" role="status" aria-live="polite">
+        <span aria-hidden="true">✓</span>
+        <div><strong>EXPORT SAVED</strong><p th:text="${success}">Report export saved.</p></div>
+        <div class="report-ready-actions" th:if="${generatedExportId != null}">
+            <a class="btn btn-secondary btn-sm" th:if="${generatedExportFormat == null or generatedExportFormat.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${generatedExportId},preview=true)}" target="_blank">View PDF&nbsp; ↗</a>
+            <a class="btn btn-primary btn-sm" th:if="${generatedExportFormat != null and generatedExportFormat.name() == 'CSV'}" th:href="@{/reports/export/{id}/csv(id=${generatedExportId})}">Download CSV&nbsp; ↓</a>
+            <a class="btn btn-primary btn-sm" th:if="${generatedExportFormat == null or generatedExportFormat.name() == 'PDF'}" th:href="@{/reports/export/{id}/pdf(id=${generatedExportId})}">Download PDF&nbsp; ↓</a>
+        </div>
+    </div>
+    <div th:if="${exportError}" class="review-export-notice is-error" role="alert"><span aria-hidden="true">!</span><div><strong>REPORT NOT GENERATED</strong><p th:text="${exportError}">Check the report details and try again.</p></div></div>
+    <div th:if="${managementSuccess}" class="review-export-notice is-success" role="status"><span aria-hidden="true">✓</span><div><strong>REVIEW UPDATED</strong><p th:text="${managementSuccess}">Review management details saved.</p></div></div>
+    <div th:if="${managementError}" class="review-export-notice is-error" role="alert"><span aria-hidden="true">!</span><div><strong>REVIEW NOT UPDATED</strong><p th:text="${managementError}">Check the management details and try again.</p></div></div>
+
+    <div class="review-live-toolbar" data-review-live-toolbar data-endpoint="/api/reports/reviews" role="status" aria-live="polite">
+        <span class="review-live-indicator"><i></i> LIVE REVIEW INTELLIGENCE</span>
+        <span class="review-live-copy" data-review-live-message>Analytics refresh automatically every 30 seconds.</span>
+        <span class="review-live-updated" data-review-last-updated>Last checked on page load</span>
+        <button type="button" class="review-live-refresh" data-review-refresh><span aria-hidden="true">↻</span> Refresh insights</button>
+    </div>
+
+    <section class="review-kpi-grid" aria-label="Review intelligence summary" data-review-kpis>
+        <article class="review-kpi-card"><span class="eyebrow">AVERAGE RATING</span><strong id="review-live-average" class="count-up" data-format="rating" th:attr="data-value=${averageRating}" th:text="${#numbers.formatDecimal(averageRating,1,1)} + ' / 5'">0.0 / 5</strong><small>Across <span th:text="${reviewCount}">0</span> submitted reviews</small></article>
+        <article class="review-kpi-card"><span class="eyebrow">TOTAL REVIEWS</span><strong id="review-live-total" class="count-up" data-format="integer" th:attr="data-value=${reviewCount}" th:text="${reviewCount}">0</strong><small>Customer journeys shared</small></article>
+        <article class="review-kpi-card"><span class="eyebrow">5-STAR REVIEWS</span><strong id="review-live-five-star" class="count-up" data-format="integer" th:attr="data-value=${fiveStarReviewCount}" th:text="${fiveStarReviewCount}">0</strong><small><span id="review-live-five-star-percent" class="count-up" data-format="percent" th:attr="data-value=${fiveStarReviewPercent}" th:text="${fiveStarReviewPercent} + '%'">0%</span> of all reviews</small></article>
+        <article class="review-kpi-card review-kpi-attention"><span class="eyebrow">NEEDS ATTENTION</span><strong id="review-live-attention" class="count-up" data-format="integer" th:attr="data-value=${attentionCount}" th:text="${attentionCount}">0</strong><small>Flagged or rated 1–2 stars</small></article>
+    </section>
+
+    <section class="experience-health-panel" aria-labelledby="experience-health-title">
+        <div class="experience-health-score" th:style="'--health-score:' + ${experienceHealthScore} + '%'">
+            <span><strong id="review-live-health" class="count-up" data-format="integer" th:attr="data-value=${experienceHealthScore}" th:text="${experienceHealthScore}">0</strong><small>/ 100</small></span>
+        </div>
+        <div class="experience-health-main"><span class="eyebrow">CUSTOMER EXPERIENCE HEALTH</span><h2 id="review-live-health-label" th:text="${experienceHealthLabel}">Awaiting feedback</h2><p>Composite score: 60% rating quality + 30% 4–5 star share + 10% inverse attention rate. Built from current customer feedback.</p></div>
+        <div class="experience-health-metrics">
+            <div><span>RATING QUALITY</span><strong><span id="review-live-rating-quality" class="count-up" data-format="percent" th:attr="data-value=${ratingQualityRate}" th:text="${ratingQualityRate} + '%'">0%</span></strong></div>
+            <div><span>POSITIVE EXPERIENCE</span><strong><span id="review-live-positive-rate" class="count-up" data-format="percent" th:attr="data-value=${positiveExperienceRate}" th:text="${positiveExperienceRate} + '%'">0%</span></strong></div>
+            <div><span>ATTENTION RATE</span><strong><span id="review-live-attention-rate" class="count-up" data-format="percent" th:attr="data-value=${attentionRate}" th:text="${attentionRate} + '%'">0%</span></strong></div>
+        </div>
+    </section>
+
+    <section class="review-analytics-grid" aria-label="Customer experience analytics">
+        <article class="review-intel-panel">
+            <div class="review-panel-heading"><div><span class="eyebrow">RATING DISTRIBUTION</span><h2>How customers rate RentEase</h2></div><span class="review-data-note" th:text="${reviewCount} + ' reviews'">0 reviews</span></div>
+            <div class="rating-distribution" data-review-rating-distribution th:if="${reviewCount > 0}">
+                <button class="rating-distribution-row" type="button" th:each="bucket : ${ratingDistribution}" th:attr="data-select-review-rating=${bucket.rating},data-live-rating=${bucket.rating},aria-label=${'Show ' + bucket.count + ' reviews rated ' + bucket.rating + ' stars'}"><span class="rating-distribution-label" th:text="${bucket.rating} + ' star'">5 star</span><span class="rating-track"><span class="rating-fill" th:style="'width:' + ${bucket.percent} + '%'" data-rating-fill></span></span><strong class="count-up" data-live-rating-count th:attr="data-value=${bucket.count}" th:text="${bucket.count}">0</strong></button>
+            </div>
+            <div class="review-analytics-empty" th:if="${reviewCount == 0}">Ratings will appear here after customers complete and review a rental.</div>
+        </article>
+
+        <article class="review-intel-panel review-trend-panel">
+            <div class="review-panel-heading"><div><span class="eyebrow">CUSTOMER EXPERIENCE TREND</span><h2>Average rating by month</h2></div><span class="review-chart-legend"><i></i>Rating / 5</span></div>
+            <div class="review-trend-chart" th:if="${trendReady}" data-review-trend>
+                <svg viewBox="0 0 720 240" role="img" aria-label="Monthly average customer rating trend">
+                    <line x1="48" y1="28" x2="48" y2="190" class="review-chart-axis"/><line x1="48" y1="190" x2="700" y2="190" class="review-chart-axis"/>
+                    <line x1="48" y1="109" x2="700" y2="109" class="review-chart-gridline"/>
+                    <text x="12" y="34" class="review-chart-tick">5</text><text x="12" y="114" class="review-chart-tick">3</text><text x="12" y="194" class="review-chart-tick">1</text>
+                    <path class="review-trend-line" data-trend-line th:attr="d=${reviewTrendPath}"/>
+                    <g class="review-trend-points"><circle th:each="point : ${reviewTrend}" th:attr="cx=${point.x},cy=${point.y},data-month-count=${point.count}" r="4"/></g>
+                    <g class="review-trend-labels"><text th:each="point : ${reviewTrend}" th:attr="x=${point.x},y=220" text-anchor="middle" th:text="${point.label}">Oct '26</text></g>
+                </svg>
+                <div class="review-chart-summary"><span>Based on actual review submission dates</span><strong th:text="${reviewTrend.size()} + ' months'">0 months</strong></div>
+                <div class="review-trend-samples" aria-label="Monthly average rating and review sample counts"><span th:each="point : ${reviewTrend}"><strong th:text="${point.label}">Oct '26</strong><b th:text="${#numbers.formatDecimal(point.average,1,2)} + ' / 5'">0.00 / 5</b><small th:text="${point.count} + ' reviews'">0 reviews</small></span></div>
+            </div>
+            <div class="review-analytics-empty" th:unless="${trendReady}">A rating trend will appear when reviews span at least two different months.</div>
+            <div class="review-period-comparison" aria-label="Current month compared with previous month">
+                <div><span class="eyebrow">THIS MONTH · <span th:text="${currentReviewPeriod}">2026-10</span></span><strong><span class="count-up" data-format="rating" th:attr="data-value=${currentPeriodAverage}" th:text="${#numbers.formatDecimal(currentPeriodAverage,1,2)}">0.00</span> / 5</strong><small th:text="${currentPeriodReviewCount} + ' reviews'">0 reviews</small></div>
+                <div><span class="eyebrow">PREVIOUS · <span th:text="${previousReviewPeriod}">2026-09</span></span><strong><span class="count-up" data-format="rating" th:attr="data-value=${previousPeriodAverage}" th:text="${#numbers.formatDecimal(previousPeriodAverage,1,2)}">0.00</span> / 5</strong><small th:text="${previousPeriodReviewCount} + ' reviews'">0 reviews</small></div>
+                <p th:if="${reviewPeriodComparisonAvailable}">Average rating change <strong th:text="${reviewPeriodAverageDelta > 0 ? '+' : ''} + ${#numbers.formatDecimal(reviewPeriodAverageDelta,1,2)} + ' points'">0.00 points</strong></p>
+                <p th:unless="${reviewPeriodComparisonAvailable}">Comparison needs at least one submitted review in both months.</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="review-intel-panel vehicle-experience-panel">
+        <div class="review-panel-heading"><div><span class="eyebrow">VEHICLE EXPERIENCE</span><h2>Ratings by vehicle</h2></div><span class="review-data-note">Review-backed fleet insight</span></div>
+        <div class="review-insight-strip" th:if="${!#lists.isEmpty(vehicleExperience)}">
+            <div class="review-best-insight" th:each="bestVehicle, bestVehicleStat : ${vehicleExperience}" th:if="${bestVehicleStat.first}"><span class="eyebrow">BEST RATED · NO MINIMUM SAMPLE FILTER</span><strong th:text="${bestVehicle.name}">Vehicle</strong><span><b class="count-up" data-format="rating" th:attr="data-value=${bestVehicle.average}" th:text="${#numbers.formatDecimal(bestVehicle.average,1,1)}">0.0</b> / 5 · <b class="count-up" data-format="integer" th:attr="data-value=${bestVehicle.count}" th:text="${bestVehicle.count}">0</b> completed-rental reviews</span></div>
+            <div class="review-attention-insight"><span class="eyebrow">NEEDS ATTENTION</span><strong class="count-up" data-format="integer" th:attr="data-value=${attentionCount}" th:text="${attentionCount}">0</strong><span th:text="${attentionCount == 1} ? 'flagged or low-rated review' : 'flagged or low-rated reviews'">reviews</span></div>
+        </div>
+        <ol class="vehicle-experience-list" th:if="${!#lists.isEmpty(vehicleExperience)}">
+            <li class="vehicle-experience-row" th:each="item,iter : ${vehicleExperience}" th:classappend="${item.vehicleId == bestRatedVehicleId} ? ' is-best-rated' : ''">
+                <span class="vehicle-experience-rank" th:text="${#numbers.formatInteger(iter.count,2)}">01</span>
+                <div class="vehicle-experience-thumb">
+                    <img th:if="${item.image != null and !#strings.isEmpty(item.image)}" th:src="${item.image}" th:alt="${item.name}" loading="lazy"/>
+                    <span th:if="${item.image == null or #strings.isEmpty(item.image)}" aria-hidden="true">RE</span>
+                </div>
+                <div class="vehicle-experience-copy"><div><button class="vehicle-experience-select" type="button" th:attr="data-select-review-vehicle=${item.vehicleId}" th:text="${item.name}">Vehicle</button><span th:text="${item.category}">Category</span></div><div class="vehicle-experience-meter"><span class="rating-fill" th:style="'width:' + ${item.percent} + '%'" data-rating-fill></span></div></div>
+                <div class="vehicle-experience-score"><strong><span aria-hidden="true">★</span> <span class="count-up" data-format="rating" th:attr="data-value=${item.average}" th:text="${#numbers.formatDecimal(item.average,1,1)}">0.0</span></strong><small><span class="count-up" data-format="integer" th:attr="data-value=${item.count}" th:text="${item.count}">0</span><span th:text="${item.count == 1} ? ' review' : ' reviews'"> reviews</span></small></div>
+                <span class="vehicle-experience-badge" th:classappend="${item.attention} ? ' is-attention' : (item.experienceStatus == 'Monitor' ? ' is-monitor' : '')" th:text="${item.experienceStatus}">Strong</span>
+            </li>
+        </ol>
+        <div class="review-analytics-empty" th:if="${#lists.isEmpty(vehicleExperience)}">Vehicle ratings will appear after customers review completed rentals.</div>
+    </section>
+
+    <section class="review-management-panel" aria-labelledby="review-management-title">
+        <div class="review-management-heading"><div><span class="eyebrow">REVIEW MANAGEMENT</span><h2 id="review-management-title">Customer feedback</h2><p>Search, inspect and manage reviews linked to real customer journeys.</p></div><span class="review-total-chip"><strong th:text="${reviewCount}">0</strong> TOTAL</span></div>
+        <div class="review-toolbar review-toolbar-premium" data-review-filters>
+            <label class="review-search-field"><span class="sr-only">Search reviews</span><input id="review-search" type="search" placeholder="Search customer, email, vehicle, journey or comment..." autocomplete="off"/></label>
+            <label><span class="sr-only">Filter by rating</span><select id="rating-filter"><option value="all">All ratings</option><option value="5">★★★★★ 5 stars</option><option value="4">★★★★ 4 stars</option><option value="3">★★★ 3 stars</option><option value="2">★★ 2 stars</option><option value="1">★ 1 star</option></select></label>
+            <label><span class="sr-only">Filter by vehicle</span><select id="vehicle-filter"><option value="all">All vehicles</option><option th:each="entry : ${vehiclesById}" th:value="${entry.key}" th:text="${entry.value.brand + ' ' + entry.value.model}">Vehicle</option></select></label>
+            <label><span class="sr-only">Filter review health</span><select id="status-filter"><option value="all">All review health</option><option value="healthy">Healthy</option><option value="monitor">Monitor</option><option value="attention">Needs attention</option></select></label>
+            <label><span class="sr-only">Filter management status</span><select id="management-status-filter"><option value="all">All management status</option><option value="unresolved">Unresolved only</option><option th:each="managementStatus : ${managementStatuses}" th:value="${managementStatus.name()}" th:text="${#strings.replace(managementStatus.name(),'_',' ')}">Open</option></select></label>
+            <label><span class="sr-only">Filter review date</span><select id="date-filter"><option value="all">All dates</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option></select></label>
+            <button id="review-filter-apply" class="btn btn-primary review-filter-apply" type="button">Search Reviews</button>
+        </div>
+        <div class="review-quick-triage" role="group" aria-label="Quick review queues">
+            <span class="review-quick-triage-label">QUICK QUEUES</span>
+            <button type="button" class="review-queue-chip is-active" data-review-quick-filter="all" aria-pressed="true">All feedback</button>
+            <button type="button" class="review-queue-chip" data-review-quick-filter="attention" aria-pressed="false">Needs attention <span aria-hidden="true">↗</span></button>
+            <button type="button" class="review-queue-chip" data-review-quick-filter="unresolved" aria-pressed="false">Unresolved cases <span aria-hidden="true">○</span></button>
+        </div>
+        <div class="review-results-meta" aria-live="polite"><span><strong id="review-count" th:text="${reviewCount}">0</strong> <span id="review-count-label">matching reviews</span></span><span>Attention rule: flagged or 1–2 stars · unresolved means any case not marked resolved</span><button id="review-filter-reset" class="review-filter-reset" type="button">Reset filters</button></div>
+        <div class="customer-voice-grid" id="review-table-body" th:if="${reviewCount > 0}">
+            <article class="customer-voice-card review-row" th:each="r : ${reviews}" th:id="'review-' + ${r.id}"
+                     th:with="vehicle=${reviewVehiclesById.get(r.id)},customer=${customersById.get(r.customerId)},reservation=${reviewReservationsById.get(r.id)},attention=${r.flagged or r.rating <= 2},monitor=${!r.flagged and r.rating == 3}"
+                     th:attr="data-rating=${r.rating},data-status=${attention ? 'attention' : (monitor ? 'monitor' : 'healthy')},data-management-status=${r.managementStatus.name()},data-management-note=${r.managementNote ?: ''},data-vehicle-id=${reviewVehicleIdsById.get(r.id)},data-date=${r.submittedAt != null ? #temporals.format(r.submittedAt,'yyyy-MM-dd') : ''},data-customer-name=${customer != null ? customer.fullName : 'Customer #' + r.customerId},data-customer-email=${customer != null ? customer.email : ''},data-vehicle=${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle details unavailable'},data-reservation-id=${reservation != null ? reservation.id : ''},data-pickup-location=${reservation != null ? reservation.pickupLocation : ''},data-return-location=${reservation != null ? reservation.dropoffLocation : ''},data-comment=${r.comment ?: ''}">
+                <div class="customer-voice-card-head"><span class="customer-voice-stars" th:text="${'★'.repeat(r.rating) + '☆'.repeat(5-r.rating)}">★★★★★</span><span class="review-health-badge" th:classappend="${attention} ? ' is-attention' : (monitor ? ' is-monitor' : '')" th:text="${attention} ? 'Needs attention' : (monitor ? 'Monitor' : 'Healthy')">Healthy</span></div>
+                <blockquote th:text="${r.comment != null and !#strings.isEmpty(r.comment) ? '“' + r.comment + '”' : '“No comment provided”'}">“Review comment”</blockquote>
+                <div class="customer-voice-details">
+                    <div><span>CUSTOMER</span><strong th:text="${customer != null ? customer.fullName : 'Customer #' + r.customerId}">Customer</strong><small th:text="${customer != null ? customer.email : 'Customer record unavailable'}">Email</small></div>
+                    <div class="customer-voice-vehicle-detail">
+                        <div class="customer-voice-image">
+                            <img class="customer-voice-image-fallback" data-review-image-fallback th:src="@{/images/vehicles/vehicle-fallback.svg}" alt="" aria-hidden="true"/>
+                            <img class="customer-voice-source-image" th:if="${reviewVehicleImagesById.get(r.id) != null}" th:src="${reviewVehicleImagesById.get(r.id)}" th:alt="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Rental vehicle'}" data-review-vehicle-image loading="lazy"/>
+                        </div>
+                        <div><span>VEHICLE</span><strong th:text="${vehicle != null ? vehicle.brand + ' ' + vehicle.model : 'Vehicle details unavailable'}">Vehicle details unavailable</strong><small th:text="${vehicle != null and vehicle.type != null ? #strings.replace(vehicle.type.name(), '_', ' ') : 'Vehicle category unavailable'}">Vehicle category unavailable</small></div>
+                    </div>
+                </div>
+                <section class="review-case-state" aria-label="Internal review resolution">
+                    <div class="review-case-state-heading"><div><span class="eyebrow">CASE STATUS</span><strong class="review-management-badge" th:classappend="${' is-' + #strings.toLowerCase(#strings.replace(r.managementStatus.name(),'_','-'))}" th:text="${#strings.replace(r.managementStatus.name(),'_',' ')}">OPEN</strong></div><small th:if="${r.managementUpdatedAt != null}" th:text="'Updated ' + ${#temporals.format(r.managementUpdatedAt,'dd MMM yyyy · HH:mm')}">Updated date</small><small th:unless="${r.managementUpdatedAt != null}">No management updates yet</small></div>
+                    <p class="review-management-note" th:if="${r.managementNote != null and !#strings.isEmpty(r.managementNote)}"><span>INTERNAL NOTE</span><span th:text="${r.managementNote}">Management note</span></p>
+                    <details class="review-resolution-tools"><summary>Update status and note</summary><form method="post" th:action="@{/reports/review/management/{id}(id=${r.id})}" class="review-resolution-form">
+                        <label>Management status<select name="managementStatus" required><option th:each="managementStatus : ${managementStatuses}" th:value="${managementStatus.name()}" th:selected="${r.managementStatus == managementStatus}" th:text="${#strings.replace(managementStatus.name(),'_',' ')}">Open</option></select></label>
+                        <label>Internal resolution note<textarea name="managementNote" rows="2" maxlength="2000" placeholder="Add an internal action or resolution note" th:text="${r.managementNote}"></textarea></label>
+                        <button class="btn btn-secondary btn-sm" type="submit">Save case update</button>
+                    </form></details>
+                </section>
+                <footer class="customer-voice-card-footer"><div><span th:if="${reservation != null}" th:text="'JOURNEY #' + ${reservation.id}">JOURNEY</span><span class="journey-route" th:if="${reservation != null and (reservation.pickupLocation != null or reservation.dropoffLocation != null)}" th:text="${reservation.pickupLocation != null ? reservation.pickupLocation : 'Pickup'} + ' → ' + ${reservation.dropoffLocation != null ? reservation.dropoffLocation : 'Drop-off'}">Pickup → Drop-off</span><span th:if="${r.submittedAt != null}" th:text="${#temporals.format(r.submittedAt,'dd MMM yyyy')}">Date</span></div><div class="review-row-actions"><a class="btn btn-sm btn-secondary" th:href="@{/reports/review/edit/{id}(id=${r.id})}">Edit</a><form method="post" th:action="@{/reports/review/delete/{id}(id=${r.id})}" class="inline-delete" onsubmit="return confirm('Delete this review?')"><button class="btn btn-danger btn-sm" type="submit">Delete</button></form></div></footer>
+            </article>
+            <div id="no-filter-results" class="filter-empty customer-voice-empty" hidden>
+                <strong>NO REVIEWS FOUND</strong>
+                <p>No reviews match your current search and filters.</p>
+                <button class="review-filter-reset" type="button" data-review-reset>Reset filters</button>
+            </div>
+        </div>
+        <div class="review-management-empty" th:if="${reviewCount == 0}"><span class="eyebrow">CUSTOMER JOURNEYS</span><strong>No reviews have been submitted yet.</strong><p>Feedback from completed rentals will appear here, along with real rating and vehicle analytics.</p><a class="btn btn-secondary" th:href="@{/reports/dashboard}">View business overview&nbsp; →</a></div>
+    </section>
+
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/reports-ui.js}" defer></script>
+</body>
+</html>

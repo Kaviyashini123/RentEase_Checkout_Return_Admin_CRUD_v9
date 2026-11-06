@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Admin Sign In')}"></head>
+<body>
+
+<main class="auth-shell auth-shell-admin auth-shell-cinematic">
+    <section class="auth-scene" aria-label="A cinematic view of a car on the road">
+        <div class="auth-scene-image"></div>
+        <div class="auth-vehicle-stage" data-scene="admin" data-model-src="/images/models/rentease-sedan.glb" aria-label="Interactive 3D premium sedan">
+            <canvas class="auth-vehicle-canvas" aria-hidden="true"></canvas>
+            <span class="auth-vehicle-status" aria-live="polite">Preparing the vehicle</span>
+        </div>
+        <div class="auth-light-trails" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="auth-scene-copy"><span class="auth-scene-kicker">RENTEASE&nbsp; · &nbsp;OPERATIONS</span><h1>Every journey,<br>in motion.</h1><p>Welcome to the operations workspace.</p><div class="auth-scene-foot"><span>FLEET · SERVICE · EXPERIENCE</span><span class="scene-scroll-mark">↓</span></div></div>
+    </section>
+    <div class="auth-card auth-card-admin">
+
+        <a th:replace="~{fragments/layout :: brand(@{/admin/login}, 'auth-brand')}"></a>
+        <span class="auth-badge auth-badge-admin">Administrator Portal</span>
+
+        <h2>Staff sign in<span class="heading-period">.</span></h2>
+        <p class="page-sub">Sign in to the RentEase operations workspace.</p>
+
+        <div class="error-banner" th:if="${error}" th:text="${error}"></div>
+        <div class="alert-box" th:if="${info}" th:text="${info}"></div>
+
+        <form id="admin-login-form" method="post" th:action="@{/admin/login}" novalidate>
+            <label>Admin Email
+                <input type="email" name="email" th:value="${email}"
+                       placeholder="admin@rentease.lk" autocomplete="username" autofocus required/>
+            </label>
+            <label>Password
+                <input type="password" name="password"
+                       placeholder="Enter your password" autocomplete="current-password" required/>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Enter operations&nbsp; →</button>
+        </form>
+
+        <p class="auth-notice">
+            Customer accounts cannot sign in here. Access attempts are validated
+            against the account role on the server.
+        </p>
+
+        <div class="auth-divider"><span>Not staff?</span></div>
+        <a class="btn btn-block" th:href="@{/login}">Back to Customer Login</a>
+
+        <p class="auth-hint">
+            Default admin login &mdash; <code>admin@rentease.lk</code> / <code>Admin@123</code>
+        </p>
+    </div>
+</main>
+
+<script type="module" th:src="@{/js/auth-3d-scene.js}"></script>
+</body>
+</html>

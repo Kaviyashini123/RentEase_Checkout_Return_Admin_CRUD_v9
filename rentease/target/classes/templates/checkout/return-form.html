@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Vehicle Return')}"></head>
+<body class="rental-operations-page">
+<header th:replace="~{fragments/layout :: navbar('checkout')}"></header>
+<main class="container checkout-workflow-shell">
+    <a class="operations-back-link" th:href="@{/checkout/manage}">← Rental operations</a>
+    <section class="checkout-workflow-intro motion-reveal"><span class="eyebrow">PHYSICAL VEHICLE RETURN</span><h1>Complete the inspection.</h1><p>Record the vehicle's return condition. Completing this step closes the rental and enables the customer's feedback flow.</p></section>
+    <div class="alert error" th:if="${error != null and !#strings.isEmpty(error)}" th:text="${error}"></div>
+    <div class="checkout-form-layout">
+        <article class="checkout-vehicle-panel">
+            <div class="checkout-vehicle-image">
+                <img th:src="${operation.vehicle.imageUrl != null and !#strings.isEmpty(operation.vehicle.imageUrl) ? operation.vehicle.imageUrl : (operation.vehicle.brand == 'Tesla' and operation.vehicle.model == 'Model 3' ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg')}" th:alt="${operation.vehicle.brand + ' ' + operation.vehicle.model}" onerror="if (!this.dataset.fallbackTried) { this.dataset.fallbackTried='true'; this.src = this.alt.includes('Tesla Model 3') ? '/images/vehicles/tesla-model-3.jpg' : '/images/vehicles/vehicle-fallback.svg'; } else { this.style.display='none'; this.nextElementSibling.style.display='grid'; }">
+                <span style="display:none">RENTEASE · VEHICLE RETURN</span>
+                <b class="operation-badge active">ACTIVE RENTAL</b>
+            </div>
+            <div class="checkout-vehicle-copy"><span class="eyebrow" th:text="${operation.vehicle.type}">CATEGORY</span><h2 th:text="${operation.vehicle.brand + ' ' + operation.vehicle.model}">Vehicle</h2><strong th:text="${operation.customer != null ? operation.customer.fullName : 'Customer #' + operation.reservation.customerId}">Customer</strong></div>
+            <dl class="checkout-reservation-facts"><div><dt>RESERVATION</dt><dd th:text="'#' + ${operation.reservation.id}">#0</dd></div><div><dt>CHECKED OUT</dt><dd th:text="${operation.checkout.handoverTimestamp}">Timestamp</dd></div><div><dt>STARTING READING</dt><dd th:text="${operation.checkout.handoverOdometer + ' km · ' + operation.checkout.handoverFuelLevel}">Condition</dd></div><div><dt>EXPECTED RETURN</dt><dd th:text="${operation.checkout.expectedReturnTimestamp}">Timestamp</dd></div><div><dt>RETURN LOCATION</dt><dd th:text="${operation.reservation.dropoffLocation}">Location</dd></div></dl>
+        </article>
+        <section class="handover-form-panel">
+            <div class="checkout-panel-heading"><span class="eyebrow">CHECKLIST · 02</span><h2>Return condition</h2><p>Compare the vehicle against its handover reading and log any damage found.</p></div>
+            <form id="return-form" method="post" th:action="@{/checkout/return}" class="checkout-form" novalidate>
+                <input type="hidden" name="checkoutRecordId" th:value="${checkoutRecordId}">
+                <div class="checkout-input-grid"><label>Return odometer <span>km</span><input type="number" min="0" th:attr="min=${operation.checkout.handoverOdometer}" name="odometer" required placeholder="e.g. 24890"></label><label>Fuel at return<select name="fuelLevel" required><option value="">Select level</option><option th:each="f : ${fuelLevels}" th:value="${f}" th:text="${f}"></option></select></label></div>
+                <label>Condition photo URL <span>Optional</span><input type="url" name="photoUrl" placeholder="https://…"></label>
+                <fieldset class="damage-fieldset"><legend>Damage found <span>Optional</span></legend><label>Description<textarea name="damageDescription" rows="3" placeholder="Describe any new damage found"></textarea></label><label>Severity<select name="damageSeverity"><option value="">No damage to report</option><option value="MINOR">Minor</option><option value="MODERATE">Moderate</option><option value="SEVERE">Severe</option></select></label></fieldset>
+                <div class="staff-confirmation"><span class="eyebrow">RETURN STAFF</span><strong th:text="${'STAFF-' + session.currentUser.id + ' · ' + session.currentUser.fullName}">Staff</strong><small>Recorded from your signed-in staff account.</small></div>
+                <button type="submit" class="btn btn-primary btn-block operation-submit">Complete return <span aria-hidden="true">→</span></button>
+                <p class="checkout-legal-note">The reservation will move to COMPLETED and the vehicle will return to AVAILABLE.</p>
+            </form>
+        </section>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Payment')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('payment')}"></header>
+<main class="container">
+    <div class="page-header">
+        <div>
+            <span class="eyebrow">RENTAL OPERATIONS</span>
+            <h1>Payment activity</h1>
+            <p class="page-sub">A quick view of recent payment activity and transaction status.</p>
+        </div>
+    </div>
+    <section class="card">
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>ID</th><th>Reservation</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${payments}">
+                    <td th:text="${p.id}">1</td>
+                    <td th:text="${p.reservationId}">1</td>
+                    <td th:text="${p.customerId}">1</td>
+                    <td th:text="${p.amount}">0.00</td>
+                    <td th:text="${p.method}">CARD</td>
+                    <td th:text="${p.status}">SUCCESS</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(payments)}"><td colspan="6">No payment records yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

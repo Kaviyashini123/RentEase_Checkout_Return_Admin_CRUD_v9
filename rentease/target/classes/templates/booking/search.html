@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Search Vehicles')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('booking')}"></header>
+
+<main class="container fleet-page" th:classappend="${session.currentUser == null or !session.currentUser.admin} ? ' customer-journey' : ''" th:with="searchSubmitted=${param.type != null or param.location != null or param.transmission != null or param.fuelType != null or param.minPrice != null or param.maxPrice != null}" th:attr="data-search-results=${searchSubmitted}">
+    <section class="journey-story" th:if="${(session.currentUser == null or !session.currentUser.admin) and !searchSubmitted}" aria-label="A cinematic drive into your vehicle search">
+        <div class="journey-track">
+            <div class="journey-stage" aria-label="Scroll to travel from road to vehicle search">
+                <div class="journey-road" aria-hidden="true"><span></span></div>
+                <div class="journey-horizon" aria-hidden="true"></div>
+                <video class="journey-video journey-car" data-journey-scene="road" loop muted playsinline preload="auto" poster="https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=2000&q=85" aria-hidden="true" tabindex="-1">
+                    <source th:src="@{/videos/rentease-driving.mp4}" type="video/mp4" />
+                </video>
+                <div class="journey-window" aria-hidden="true"></div>
+                <div class="journey-interior" aria-hidden="true"><span class="interior-wheel"></span><span class="interior-dash"></span><span class="interior-screen"></span><span class="interior-glow"></span></div>
+                <div class="journey-shade" aria-hidden="true"></div>
+                <div class="journey-copy"><span class="eyebrow">RENTEASE · SRI LANKA</span><h1>Your journey<br>starts here.</h1><p>Find the right vehicle for the road ahead.</p><a class="btn btn-primary" href="#journey-search">Explore the fleet&nbsp; ↓</a></div>
+                <div class="hero-caption">MADE FOR THE MILES THAT MATTER</div>
+                <a class="journey-scroll" href="#journey-search" aria-label="Scroll to the vehicle search"><span></span>SCROLL TO EXPLORE</a>
+                <div class="journey-search" id="journey-search">
+                    <div class="journey-search-heading"><span class="eyebrow">THE ROAD IS YOURS</span><h2>Where will your journey take you?</h2></div>
+                    <div class="journey-progress" aria-hidden="true"><span></span></div>
+                
+    <form id="search-form" method="get" th:action="@{/booking}" class="filter-form" inert>
+        <div class="filter-row">
+            <label>Vehicle type
+                <select name="type">
+                    <option value="">Any</option>
+                    <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
+                            th:selected="${selectedType != null and selectedType == t}"></option>
+                </select>
+            </label>
+
+            <label>Location
+                <input type="text" name="location" placeholder="e.g. Colombo" th:value="${selectedLocation}"/>
+            </label>
+
+            <label>Transmission
+                <select name="transmission">
+                    <option value="">Any</option>
+                    <option th:each="tr : ${transmissions}" th:value="${tr}" th:text="${tr}" th:selected="${selectedTransmission != null and selectedTransmission == tr}"></option>
+                </select>
+            </label>
+
+            <label>Fuel
+                <select name="fuelType">
+                    <option value="">Any</option>
+                    <option th:each="f : ${fuelTypes}" th:value="${f}" th:text="${f}" th:selected="${selectedFuelType != null and selectedFuelType == f}"></option>
+                </select>
+            </label>
+
+            <label>Minimum · LKR / day
+                <input type="number" name="minPrice" min="0" step="0.01" th:value="${param.minPrice != null ? param.minPrice[0] : ''}"/>
+            </label>
+
+            <label>Maximum · LKR / day
+                <input type="number" name="maxPrice" min="0" step="0.01" th:value="${param.maxPrice != null ? param.maxPrice[0] : ''}"/>
+            </label>
+
+            <button type="submit" class="btn btn-primary">Search vehicles&nbsp; →</button>
+        </div>
+    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    <form th:if="${session.currentUser != null and session.currentUser.admin}" id="search-form" method="get" th:action="@{/booking}" class="filter-form admin-search-form">
+        <div class="filter-row">
+            <label>Vehicle type<select name="type"><option value="">Any</option><option th:each="t : ${types}" th:value="${t}" th:text="${t}" th:selected="${selectedType != null and selectedType == t}"></option></select></label>
+            <label>Location<input type="text" name="location" placeholder="e.g. Colombo" th:value="${selectedLocation}"/></label>
+            <label>Transmission<select name="transmission"><option value="">Any</option><option th:each="tr : ${transmissions}" th:value="${tr}" th:text="${tr}" th:selected="${selectedTransmission != null and selectedTransmission == tr}"></option></select></label>
+            <label>Fuel<select name="fuelType"><option value="">Any</option><option th:each="f : ${fuelTypes}" th:value="${f}" th:text="${f}" th:selected="${selectedFuelType != null and selectedFuelType == f}"></option></select></label>
+            <label>Minimum · LKR / day<input type="number" name="minPrice" min="0" step="0.01" th:value="${minPrice}"/></label>
+            <label>Maximum · LKR / day<input type="number" name="maxPrice" min="0" step="0.01" th:value="${maxPrice}"/></label>
+            <button type="submit" class="btn btn-primary">Find a vehicle&nbsp; →</button>
+        </div>
+    </form>
+    <section class="fleet-intro fleet-editorial" id="fleet" th:if="${(session.currentUser == null or !session.currentUser.admin) and !searchSubmitted}">
+        <div class="fleet-editorial-title">
+            <span class="eyebrow" th:text="${searchSubmitted} ? 'SEARCH RESULTS' : 'THE FLEET'">THE FLEET</span>
+            <h2 th:if="${searchSubmitted}"><span th:text="${#lists.size(vehicles)}">0</span> <span th:text="${#lists.size(vehicles) == 1 ? 'vehicle' : 'vehicles'}">vehicles</span> available for your journey.</h2>
+            <h2 th:unless="${searchSubmitted}">Choose the vehicle<br>that fits your journey.</h2>
+        </div>
+        <div class="fleet-editorial-side">
+            <p th:if="${searchSubmitted}">These are the vehicles matching your selected filters.</p>
+            <p th:unless="${searchSubmitted}">Find the right fit for the roads ahead, from everyday drives to longer journeys.</p>
+            <div class="fleet-editorial-meta">
+                <span class="fleet-result-count" th:if="${searchSubmitted}" th:text="${#lists.size(vehicles)} + ' MATCHING VEHICLES'">Vehicles found</span>
+                <span class="fleet-result-count" th:unless="${searchSubmitted}" th:text="${#lists.size(vehicles)} + ' VEHICLES FOUND'">Vehicles found</span>
+            </div>
+        </div>
+    </section>
+    <section class="fleet-intro" id="fleet" th:if="${session.currentUser != null and session.currentUser.admin}"><div><span class="eyebrow">YOUR NEXT JOURNEY STARTS HERE</span><h2>Choose your way<br>through the island.</h2></div><div><p>From quick city drives to the long way around, find a vehicle that fits the way you travel.</p><a class="staff-link" th:href="@{/booking/manage}">Open fleet management&nbsp; ↗</a></div></section>
+    <div class="fleet-results-heading" th:if="${session.currentUser != null and session.currentUser.admin}"><div><span class="eyebrow">CURATED FLEET</span><h2>Find your ride</h2></div><span th:text="${#lists.size(vehicles)} + ' vehicles'">Vehicles</span></div>
+
+    <section id="search-results" class="results-grid fleet-results" th:if="${!searchSubmitted or (session.currentUser != null and session.currentUser.admin)}" th:classappend="${#lists.size(vehicles) == 1 ? ' fleet-results-single' : (#lists.size(vehicles) == 2 ? ' fleet-results-double' : '')}" th:attr="data-search-results=${searchSubmitted}" aria-label="Vehicle search results">
+        <div class="empty-state fleet-empty" th:if="${#lists.isEmpty(vehicles) and (session.currentUser == null or !session.currentUser.admin)}">
+            <span class="eyebrow" th:text="${searchSubmitted} ? 'NO VEHICLES FOUND' : 'FLEET UPDATE'">NO VEHICLES FOUND</span>
+            <h3 th:if="${searchSubmitted}">We couldn't find a vehicle matching your search.</h3>
+            <h3 th:unless="${searchSubmitted}">No vehicles are available right now.</h3>
+            <p th:if="${searchSubmitted}">Try adjusting your filters, or clear them to explore the fleet.</p>
+            <p th:unless="${searchSubmitted}">Check back again soon to explore the fleet.</p>
+            <a class="fleet-empty-search" th:unless="${searchSubmitted}" href="#journey-search">Adjust search filters <span aria-hidden="true">↗</span></a>
+            <a class="fleet-empty-reset" th:if="${searchSubmitted}" th:href="@{/booking}">Clear search</a>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(vehicles) and session.currentUser != null and session.currentUser.admin}">
+            <p>No vehicles matched your search. Try adjusting the filters.</p>
+        </div>
+
+        <article class="vehicle-card" th:each="vehicle, stat : ${vehicles}" th:if="${session.currentUser == null or !session.currentUser.admin}" th:with="hasMappedLocalFleetImage=${(vehicle.brand == 'Toyota' and (vehicle.model == 'Corolla Axio' or vehicle.model == 'HiAce' or vehicle.model == 'Prius')) or (vehicle.brand == 'Honda' and vehicle.model == 'Vezel') or (vehicle.brand == 'Suzuki' and vehicle.model == 'Wagon R') or (vehicle.brand == 'BMW' and vehicle.model == '5 Series') or (vehicle.brand == 'Yamaha' and vehicle.model == 'FZ-S') or (vehicle.brand == 'Nissan' and vehicle.model == 'Caravan') or (vehicle.brand == 'Tesla' and vehicle.model == 'Model 3')}">
+            <a class="vehicle-photo" th:classappend="${hasMappedLocalFleetImage} ? (${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'} ? ' has-image tesla-model-3' : ' has-image') : (${vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)} ? ' has-image' : '')" th:href="@{/booking/{id}(id=${vehicle.id})}" th:attr="aria-label=${'View details for ' + vehicle.brand + ' ' + vehicle.model}">
+                <img th:if="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'}" th:src="@{/images/vehicles/tesla-model-3.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Noah Wulf · Wikimedia Commons · CC BY-SA 3.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Toyota' and vehicle.model == 'Corolla Axio'}" th:src="@{/images/vehicles/toyota-corolla-axio.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by User3204 · Wikimedia Commons · CC BY-SA 4.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Honda' and vehicle.model == 'Vezel'}" th:src="@{/images/vehicles/honda-vezel.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Tokumeigakarinoaoshima · Wikimedia Commons · CC BY-SA 4.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Suzuki' and vehicle.model == 'Wagon R'}" th:src="@{/images/vehicles/suzuki-wagon-r.png}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Riding Hub · Wikimedia Commons · CC BY 3.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Toyota' and vehicle.model == 'HiAce'}" th:src="@{/images/vehicles/toyota-hiace.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Lawrence Ruiz · Wikimedia Commons · CC BY-SA 4.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'BMW' and vehicle.model == '5 Series'}" th:src="@{/images/vehicles/bmw-5-series.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Damian B Oh · Wikimedia Commons · CC BY-SA 4.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Yamaha' and vehicle.model == 'FZ-S'}" th:src="@{/images/vehicles/yamaha-fz-s.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Praveen120 · Wikimedia Commons · CC BY-SA 3.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Nissan' and vehicle.model == 'Caravan'}" th:src="@{/images/vehicles/nissan-caravan.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Ethan Llamas · Wikimedia Commons · CC BY-SA 4.0" loading="lazy"/>
+                <img th:if="${vehicle.brand == 'Toyota' and vehicle.model == 'Prius'}" th:src="@{/images/vehicles/toyota-prius.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by TTTNIS · Wikimedia Commons · CC0 1.0" loading="lazy"/>
+                <img th:if="${!hasMappedLocalFleetImage and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}" th:src="${vehicle.imageUrl}" th:alt="${vehicle.brand + ' ' + vehicle.model}" loading="lazy"/>
+                <span class="vehicle-image-fallback" aria-hidden="true"><span>IMAGE UNAVAILABLE</span></span>
+                <span class="vehicle-availability" th:text="${vehicle.status}">Available</span>
+            </a>
+            <div class="vehicle-card-copy">
+                <div class="vehicle-card-heading"><div><span class="vehicle-category" th:text="${vehicle.type}">Vehicle type</span><h3 th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle name</h3></div><span class="vehicle-card-index" th:text="${#numbers.formatInteger(stat.count, 2)}">01</span></div>
+                <dl class="vehicle-specs">
+                    <div><dt>Transmission</dt><dd th:text="${vehicle.transmission}">Transmission</dd></div>
+                    <div><dt>Fuel</dt><dd th:text="${vehicle.fuelType}">Fuel</dd></div>
+                    <div><dt>Seats</dt><dd th:text="${vehicle.seatingCapacity}">Seats</dd></div>
+                </dl>
+                <div class="vehicle-card-footer">
+                    <div class="vehicle-price"><span class="vehicle-location" th:text="${vehicle.location}">Location</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(vehicle.dailyRate, 1, 2)}">LKR 0.00</strong><span>/ day</span></div>
+                    <div class="vehicle-card-actions">
+                        <a class="vehicle-link" th:href="@{/booking/{id}(id=${vehicle.id})}">View details <span aria-hidden="true">↗</span></a>
+                        <a class="btn btn-primary vehicle-book-link" th:if="${vehicle.status != null and vehicle.status.name() == 'AVAILABLE'}" th:href="@{/reservation/new(vehicleId=${vehicle.id})}">Book&nbsp; →</a>
+                    </div>
+                </div>
+            </div>
+        </article>
+        <article class="vehicle-card" th:each="vehicle, stat : ${vehicles}" th:if="${session.currentUser != null and session.currentUser.admin}">
+            <div class="vehicle-photo"><img th:if="${vehicle.imageUrl != null}" th:src="${vehicle.imageUrl}" th:alt="${vehicle.brand + ' ' + vehicle.model}" loading="lazy"/><span class="vehicle-index" th:text="${#numbers.formatInteger(stat.count, 2)}">01</span><span class="vehicle-availability" th:text="${vehicle.status}">Available</span></div>
+            <div class="vehicle-card-copy"><h3 th:text="${vehicle.brand + ' ' + vehicle.model}"></h3>
+            <p class="vehicle-spec" th:text="${vehicle.type + ' · ' + vehicle.transmission + ' · ' + vehicle.fuelType}"></p>
+            <p class="vehicle-spec" th:text="${vehicle.seatingCapacity + ' seats · ' + vehicle.location}"></p>
+            <p class="price"><span th:text="'LKR ' + ${#numbers.formatDecimal(vehicle.dailyRate, 1, 2)}"></span> / day</p>
+            <a class="vehicle-link" th:href="@{/booking/{id}(id=${vehicle.id})}">View vehicle <span>↗</span></a></div>
+        </article>
+    </section>
+    <section id="search-results" class="search-results-presentation fleet-results" th:if="${(session.currentUser == null or !session.currentUser.admin) and searchSubmitted}" th:attr="data-search-results=${searchSubmitted}" aria-label="Matching vehicles">
+        <div class="search-results-empty empty-state fleet-empty" th:if="${#lists.isEmpty(vehicles)}">
+            <span class="eyebrow">NO VEHICLES FOUND</span>
+            <h3>We couldn't find a vehicle matching your search.</h3>
+            <p>Try adjusting your filters, or clear your search to explore the fleet.</p>
+            <a class="fleet-empty-reset" th:href="@{/booking}">Clear search</a>
+        </div>
+        <div class="search-results-content" th:unless="${#lists.isEmpty(vehicles)}">
+            <section class="featured-result" aria-label="Featured matching vehicle">
+                <div class="featured-result-heading">
+                    <div><span class="eyebrow">YOUR MATCH</span><p>Here’s a vehicle that fits your search.</p></div>
+                    <span class="featured-result-count" th:text="${#lists.size(vehicles) == 1 ? '1 VEHICLE AVAILABLE' : #lists.size(vehicles) + ' VEHICLES AVAILABLE'}">1 VEHICLE AVAILABLE</span>
+                </div>
+                <article class="vehicle-card featured-vehicle" th:with="vehicle=${vehicles[0]}">
+                    <a class="vehicle-photo" th:classappend="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'} ? ' has-image tesla-model-3' : (${vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)} ? ' has-image' : '')" th:href="@{/booking/{id}(id=${vehicle.id})}" th:attr="aria-label=${'View details for ' + vehicle.brand + ' ' + vehicle.model}">
+                        <img th:if="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'}" th:src="@{/images/vehicles/tesla-model-3.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Noah Wulf · Wikimedia Commons · CC BY-SA 3.0" loading="lazy"/>
+                        <img th:if="${(vehicle.brand != 'Tesla' or vehicle.model != 'Model 3') and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}" th:src="${vehicle.imageUrl}" th:alt="${vehicle.brand + ' ' + vehicle.model}" loading="lazy"/>
+                        <span class="vehicle-image-fallback" aria-hidden="true"><span>IMAGE UNAVAILABLE</span></span>
+                        <span class="vehicle-availability" th:text="${vehicle.status}">Available</span>
+                    </a>
+                    <div class="vehicle-card-copy">
+                        <div class="vehicle-card-heading"><div><span class="vehicle-category" th:text="${vehicle.type}">Vehicle type</span><h3 th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle name</h3></div></div>
+                        <p class="featured-vehicle-spec-line"><span th:text="${vehicle.type}">Type</span><span th:text="${vehicle.transmission}">Transmission</span><span th:text="${vehicle.fuelType}">Fuel</span><span th:text="${vehicle.seatingCapacity} + ' seats'">Seats</span></p>
+                        <p class="featured-vehicle-location" th:text="${vehicle.location}">Location</p>
+                        <div class="vehicle-card-footer">
+                            <div class="vehicle-price"><strong th:text="'LKR ' + ${#numbers.formatDecimal(vehicle.dailyRate, 1, 2)}">LKR 0.00</strong><span>/ day</span></div>
+                            <div class="vehicle-card-actions featured-vehicle-actions">
+                                <a class="vehicle-link" th:href="@{/booking/{id}(id=${vehicle.id})}">View details <span aria-hidden="true">↗</span></a>
+                                <a class="btn btn-primary vehicle-book-link" th:if="${vehicle.status != null and vehicle.status.name() == 'AVAILABLE'}" th:href="@{/reservation/new(vehicleId=${vehicle.id})}">Book now&nbsp; →</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+            <section class="other-matches" th:if="${#lists.size(vehicles) > 1}" aria-label="Other matching vehicles">
+                <div class="other-matches-heading"><div><span class="eyebrow">OTHER MATCHES</span><h2>More vehicles matching your search</h2></div><span class="other-matches-count" th:text="${#lists.size(vehicles) - 1} + ' MORE'">MORE</span></div>
+                <div class="results-grid secondary-results">
+                    <article class="vehicle-card" th:each="vehicle, stat : ${vehicles}" th:if="${stat.index > 0}">
+                        <a class="vehicle-photo" th:classappend="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'} ? ' has-image tesla-model-3' : (${vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)} ? ' has-image' : '')" th:href="@{/booking/{id}(id=${vehicle.id})}" th:attr="aria-label=${'View details for ' + vehicle.brand + ' ' + vehicle.model}">
+                            <img th:if="${vehicle.brand == 'Tesla' and vehicle.model == 'Model 3'}" th:src="@{/images/vehicles/tesla-model-3.jpg}" th:alt="${vehicle.brand + ' ' + vehicle.model}" title="Photo by Noah Wulf · Wikimedia Commons · CC BY-SA 3.0" loading="lazy"/>
+                            <img th:if="${(vehicle.brand != 'Tesla' or vehicle.model != 'Model 3') and vehicle.imageUrl != null and !#strings.isEmpty(vehicle.imageUrl)}" th:src="${vehicle.imageUrl}" th:alt="${vehicle.brand + ' ' + vehicle.model}" loading="lazy"/>
+                            <span class="vehicle-image-fallback" aria-hidden="true"><span>IMAGE UNAVAILABLE</span></span>
+                            <span class="vehicle-availability" th:text="${vehicle.status}">Available</span>
+                        </a>
+                        <div class="vehicle-card-copy">
+                            <div class="vehicle-card-heading"><div><span class="vehicle-category" th:text="${vehicle.type}">Vehicle type</span><h3 th:text="${vehicle.brand + ' ' + vehicle.model}">Vehicle name</h3></div></div>
+                            <dl class="vehicle-specs"><div><dt>Transmission</dt><dd th:text="${vehicle.transmission}">Transmission</dd></div><div><dt>Fuel</dt><dd th:text="${vehicle.fuelType}">Fuel</dd></div><div><dt>Seats</dt><dd th:text="${vehicle.seatingCapacity}">Seats</dd></div></dl>
+                            <div class="vehicle-card-footer"><div class="vehicle-price"><span class="vehicle-location" th:text="${vehicle.location}">Location</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(vehicle.dailyRate, 1, 2)}">LKR 0.00</strong><span>/ day</span></div><div class="vehicle-card-actions"><a class="vehicle-link" th:href="@{/booking/{id}(id=${vehicle.id})}">View details <span aria-hidden="true">↗</span></a><a class="btn btn-primary vehicle-book-link" th:if="${vehicle.status != null and vehicle.status.name() == 'AVAILABLE'}" th:href="@{/reservation/new(vehicleId=${vehicle.id})}">Book&nbsp; →</a></div></div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </section>
+    <section class="fleet-closer"><span class="eyebrow">THE ROAD IS YOURS</span><p>Good journeys begin with a vehicle that feels right.</p><a class="btn btn-secondary" href="#fleet">Back to the fleet&nbsp; ↑</a></section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
